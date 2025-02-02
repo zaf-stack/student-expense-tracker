@@ -100,9 +100,22 @@ export default function Layout({ children }) {
                                         component={Link}
                                         to={item.path}
                                         selected={location.pathname === item.path}
+                                        sx={{
+                                            // Active Tab Highlighting
+                                            backgroundColor: location.pathname === item.path ? '#e3f2fd' : 'inherit',
+                                            '&:hover': { backgroundColor: '#f5f5f5' }
+                                        }}
                                     >
-                                        <ListItemIcon>{item.icon}</ListItemIcon>
-                                        <ListItemText primary={item.text} />
+                                        <ListItemIcon sx={{ color: location.pathname === item.path ? '#1976d2' : 'inherit' }}>
+                                            {item.icon}
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={item.text}
+                                            primaryTypographyProps={{
+                                                fontWeight: location.pathname === item.path ? 'bold' : 'normal',
+                                                color: location.pathname === item.path ? '#1976d2' : 'inherit'
+                                            }}
+                                        />
                                     </ListItem>
                                 ))}
                             </List>
