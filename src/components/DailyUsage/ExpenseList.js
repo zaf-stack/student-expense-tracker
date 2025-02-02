@@ -1,49 +1,10 @@
 // src/components/DailyUsage/ExpenseList.js
 import React, { useState } from 'react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
-    Paper,
-    IconButton,
-    TextField,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Box
-} from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import MaterialTable from '@material-table/core';
+import { DeleteOutline, Edit } from '@mui/icons-material';
+import { ExportCsv, ExportPdf } from '@material-table/exporters';
 import EditExpenseModal from './EditExpenseModal';
-
-// Sample data - later we'll move this to a proper data management solution
-// const sampleExpenses = [
-//     {
-//         id: 1,
-//         date: '2024-01-19',
-//         category: 'grocery',
-//         description: 'Monthly groceries from DMart',
-//         amount: 2500
-//     },
-//     {
-//         id: 2,
-//         date: '2024-01-19',
-//         category: 'vegetables',
-//         description: 'Weekly vegetables',
-//         amount: 400
-//     },
-//     {
-//         id: 3,
-//         date: '2024-01-18',
-//         category: 'outside_food',
-//         description: 'Lunch with friends',
-//         amount: 350
-//     }
-// ];
+import { TextField, InputAdornment } from '@mui/material';
 
 const categories = {
     grocery: 'Grocery',
@@ -54,22 +15,97 @@ const categories = {
 };
 
 export default function ExpenseList({ expenses, onDelete, onEdit }) {
-    // const [expenses] = useState(sampleExpenses);
-    const [filterDate, setFilterDate] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState(null);
 
-    const filteredExpenses = expenses.filter(expense => {
-        const dateMatch = !filterDate || expense.date === filterDate;
-        const categoryMatch = !filterCategory || expense.category === filterCategory;
-        return dateMatch && categoryMatch;
-    });
+    // Columns Configuration
+    const columns = [
+        {
+            title: 'Date',
+            field: 'date',
+            type: 'date',
+            filtering: true,
+            headerStyle: { fontWeight: 'bold' },
+            customFilterAndSearch: (filter, rowData) => {
+                if (!filter) return true;
+                const rowDate = new Date(rowData.date);
+                const filterDate = new Date(filter);
 
-    const handleDelete = (id) => {
-        onDelete(id);
-    };
+                // Exact Date Match
+                return rowDate.toISOString().split('T')[0] === filter;
+            },
+            filterComponent: ({ onFilterChanged, columnDef }) => (
+                <TextField
+                    type="date"
+                    onChange={(e) => onFilterChanged(columnDef.tableData.id, e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                />
+            )
+        },
+        {
+            title: 'Category',
+            field: 'category',
+            lookup: categories,
+            filterPlaceholder: 'All Categories'
+        },
+        {
+            title: 'Description',
+            field: 'description',
+            cellStyle: { whiteSpace: 'nowrap' },
+            // Global Search Fix
+            customFilterAndSearch: (filter, rowData) =>
+                rowData.description.toLowerCase().includes(filter.toLowerCase())
+        },
+        {
+            title: 'Amount (₹)',
+            field: 'amount',
+            type: 'numeric',
+            render: rowData => `₹${rowData.amount.toFixed(2)}`,
+            align: 'right',
+            headerStyle: { textAlign: 'right' },
+            customFilterAndSearch: (filter, rowData) => {
+                if (!filter) return true;
+                if (typeof filter !== 'string') return true;
 
+                // Handle Range (100-500)
+                if (filter.includes('-')) {
+                    const [min, max] = filter.split('-').map(Number);
+                    if (isNaN(min) || isNaN(max)) return true;
+                    return rowData.amount >= min && rowData.amount <= max;
+                }
+
+                // Handle Exact Amount (100)
+                return rowData.amount === Number(filter);
+            },
+            filterComponent: ({ onFilterChanged, columnDef }) => (
+                <TextField
+                    placeholder="Ex: 100 or 100-500"
+                    onChange={(e) => onFilterChanged(columnDef.tableData.id, e.target.value)}
+                    InputProps={{
+                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                    }}
+                    fullWidth
+                />
+            )
+        }
+    ];
+
+    // Table Actions
+    const actions = [
+        {
+            icon: () => <Edit color="primary" />,
+            tooltip: 'Edit Expense',
+            onClick: (event, rowData) => handleEditClick(rowData)
+        },
+        {
+            icon: () => <DeleteOutline color="error" />,
+            tooltip: 'Delete Expense',
+            onClick: (event, rowData) => onDelete(rowData.id)
+        }
+    ];
+
+    // Edit Handlers
     const handleEditClick = (expense) => {
         setSelectedExpense(expense);
         setEditModalOpen(true);
@@ -78,87 +114,45 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
     const handleEditSave = (updatedExpense) => {
         onEdit(updatedExpense);
         setEditModalOpen(false);
-        setSelectedExpense(null);
-    };
-
-    const handleEditClose = () => {
-        setEditModalOpen(false);
-        setSelectedExpense(null);
     };
 
     return (
         <div>
-
-
-            {/* Filters */}
-            <Box className="mb-4 flex gap-4">
-                <TextField
-                    label="Filter by Date"
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                />
-                <FormControl style={{ minWidth: 200 }}>
-                    <InputLabel>Filter by Category</InputLabel>
-                    <Select
-                        value={filterCategory}
-                        label="Filter by Category"
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                    >
-                        <MenuItem value="">All Categories</MenuItem>
-                        {Object.entries(categories).map(([id, name]) => (
-                            <MenuItem key={id} value={id}>{name}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </Box>
-
-            {/* Expense Table */}
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Category</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell align="right">Amount</TableCell>
-                            <TableCell align="center">Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredExpenses.map((expense) => (
-                            <TableRow key={expense.id}>
-                                <TableCell>{expense.date}</TableCell>
-                                <TableCell>{categories[expense.category]}</TableCell>
-                                <TableCell>{expense.description}</TableCell>
-                                <TableCell align="right">₹{expense.amount}</TableCell>
-                                <TableCell align="center">
-                                    <IconButton
-                                        color="primary"
-                                        onClick={() => handleEditClick(expense)}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        color="error"
-                                        onClick={() => handleDelete(expense.id)}
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <MaterialTable
+                title="Daily Expenses"
+                columns={columns}
+                data={expenses}
+                actions={actions}
+                options={{
+                    actionsColumnIndex: -1,
+                    filtering: true,
+                    sorting: true,
+                    pageSize: 10,
+                    pageSizeOptions: [5, 10, 20],
+                    // searchFieldAlignment: 'left',
+                    searchAutoFocus: true,
+                    exportMenu: [
+                        {
+                            label: 'Export PDF',
+                            exportFunc: (cols, datas) => ExportPdf(cols, datas, 'Expenses')
+                        },
+                        {
+                            label: 'Export CSV',
+                            exportFunc: (cols, datas) => ExportCsv(cols, datas, 'Expenses')
+                        }
+                    ],
+                    headerStyle: {
+                        backgroundColor: '#1976d2',
+                        color: 'white',
+                        fontSize: '1rem'
+                    }
+                }}
+            />
 
             <EditExpenseModal
                 open={editModalOpen}
                 expense={selectedExpense}
-                onClose={handleEditClose}
+                onClose={() => setEditModalOpen(false)}
                 onSave={handleEditSave}
             />
         </div>
