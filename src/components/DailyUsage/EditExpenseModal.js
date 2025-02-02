@@ -15,6 +15,7 @@ import {
     Alert
 } from '@mui/material';
 import { validateExpenseForm } from '../../utils/validationUtils';
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const categories = [
     { id: 'grocery', name: 'Grocery' },
@@ -25,6 +26,11 @@ const categories = [
 ];
 
 export default function EditExpenseModal({ open, expense, onClose, onSave }) {
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+
     const [formData, setFormData] = useState({
         category: '',
         amount: '',
@@ -162,10 +168,14 @@ export default function EditExpenseModal({ open, expense, onClose, onSave }) {
         <Dialog
             open={open}
             onClose={onClose}
-            maxWidth="sm"
             fullWidth
+            fullScreen={isMobile} // Fullscreen on mobile
+            maxWidth="sm"
             PaperProps={{
-                sx: { minHeight: '400px' }
+                sx: {
+                    minHeight: isMobile ? '100vh' : '400px',
+                    p: isMobile ? 1 : 2
+                }
             }}
         >
             <DialogTitle>Edit Expense</DialogTitle>

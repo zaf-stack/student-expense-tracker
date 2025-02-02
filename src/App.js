@@ -6,6 +6,9 @@ import Layout from './components/common/Layout';
 import DashboardPage from './components/Dashboard/DashboardPage';
 import DailyUsagePage from './components/DailyUsage/DailyUsagePage';
 import AnalyticsPage from './components/Analytics/AnalyticsPage';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 
 // Pages
@@ -40,7 +43,10 @@ function App({ expenses }) {
           </Routes>
         </Layout>
       </Router>
+      <ToastContainer position="top-right" autoClose={3000} />
+
     </ThemeProvider>
+
   );
 }
 

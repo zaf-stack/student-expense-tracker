@@ -7,6 +7,8 @@ import {
     LinearProgress
 } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useTheme, useMediaQuery } from '@mui/material';
+
 
 
 const categories = {
@@ -21,6 +23,10 @@ const categories = {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function CategorySummary({ expenses, }) {
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     // Calculate category-wise totals
     const categoryTotals = expenses.reduce((acc, expense) => {
         const category = categories[expense.category] || expense.category;
@@ -43,10 +49,13 @@ export default function CategorySummary({ expenses, }) {
                 Expense Distribution
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
                 {/* Pie Chart */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: 300 }}>
+                    <Paper sx={{
+                        p: 2,
+                        height: isMobile ? 250 : 300
+                    }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie

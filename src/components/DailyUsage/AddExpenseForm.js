@@ -10,7 +10,8 @@ import {
     Typography,
     InputAdornment,
     FormHelperText,
-    Alert
+    Alert,
+    Box
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { validateExpenseForm } from '../../utils/validationUtils';
@@ -178,7 +179,7 @@ export default function AddExpenseForm({ onSubmit }) {
         // </form>
 
         <form onSubmit={handleSubmit}>
-            <Typography variant="h6" className="mb-4">
+            <Typography variant="h6" sx={{ mb: 2 }}>
                 Add Daily Expense
             </Typography>
 
@@ -187,81 +188,86 @@ export default function AddExpenseForm({ onSubmit }) {
                     {submitError}
                 </Alert>
             )}
+            <Box sx={{
+                '& > *:not(:last-child)': {
+                    mb: 2 // Spacing between form elements
+                }
+            }}>
+                <div className="space-y-4">
+                    <FormControl fullWidth error={!!errors.category}>
+                        <InputLabel>Category</InputLabel>
+                        <Select
+                            name="category"
+                            value={formData.category}
+                            label="Category"
+                            onChange={handleChange}
+                            required
+                        >
+                            {categories.map(cat => (
+                                <MenuItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.category && (
+                            <FormHelperText>{errors.category}</FormHelperText>
+                        )}
+                    </FormControl>
 
-            <div className="space-y-4">
-                <FormControl fullWidth error={!!errors.category}>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                        name="category"
-                        value={formData.category}
-                        label="Category"
+                    <TextField
+                        fullWidth
+                        label="Amount"
+                        name="amount"
+                        type="number"
+                        value={formData.amount}
                         onChange={handleChange}
                         required
+                        error={!!errors.amount}
+                        helperText={errors.amount}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        multiline
+                        rows={2}
+                        error={!!errors.description}
+                        helperText={errors.description}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Date"
+                        name="date"
+                        type="date"
+                        value={formData.date}
+                        onChange={handleChange}
+                        required
+                        error={!!errors.date}
+                        helperText={errors.date}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                    />
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        startIcon={<AddIcon />}
+                        disabled={isSubmitting}
                     >
-                        {categories.map(cat => (
-                            <MenuItem key={cat.id} value={cat.id}>
-                                {cat.name}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                    {errors.category && (
-                        <FormHelperText>{errors.category}</FormHelperText>
-                    )}
-                </FormControl>
-
-                <TextField
-                    fullWidth
-                    label="Amount"
-                    name="amount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    required
-                    error={!!errors.amount}
-                    helperText={errors.amount}
-                    InputProps={{
-                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                    }}
-                />
-
-                <TextField
-                    fullWidth
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    multiline
-                    rows={2}
-                    error={!!errors.description}
-                    helperText={errors.description}
-                />
-
-                <TextField
-                    fullWidth
-                    label="Date"
-                    name="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    required
-                    error={!!errors.date}
-                    helperText={errors.date}
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                />
-
-                <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    startIcon={<AddIcon />}
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? 'Adding...' : 'Add Expense'}
-                </Button>
-            </div>
+                        {isSubmitting ? 'Adding...' : 'Add Expense'}
+                    </Button>
+                </div>
+            </Box>
         </form>
     );
 }
