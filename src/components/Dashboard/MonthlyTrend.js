@@ -11,16 +11,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-const data = [
-    { name: 'Jan', expenses: 4000 },
-    { name: 'Feb', expenses: 3000 },
-    { name: 'Mar', expenses: 5000 },
-    { name: 'Apr', expenses: 2780 },
-    { name: 'May', expenses: 1890 },
-    { name: 'Jun', expenses: 2390 },
-];
-
-export default function MonthlyTrend() {
+export default function MonthlyTrend({ data }) {
     return (
         <>
             <Typography variant="h6" className="mb-4">

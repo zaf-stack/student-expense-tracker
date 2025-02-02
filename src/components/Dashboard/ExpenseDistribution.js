@@ -2,17 +2,9 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-const data = [
-    { name: 'Food', value: 4000 },
-    { name: 'Education', value: 3000 },
-    { name: 'Transport', value: 2000 },
-    { name: 'Entertainment', value: 1500 },
-    { name: 'Others', value: 1000 }
-];
-
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-export default function ExpenseDistribution() {
+export default function ExpenseDistribution({ data }) {
     return (
         <>
             <Typography variant="h6" className="mb-4">
