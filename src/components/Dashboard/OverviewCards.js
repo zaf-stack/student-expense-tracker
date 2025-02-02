@@ -24,13 +24,15 @@ const OverviewCard = ({ title, value, icon, color }) => (
     </Paper>
 );
 
-export default function OverviewCards() {
+export default function OverviewCards({ totalExpenses, monthlyBudget }) {
+    const savings = monthlyBudget - totalExpenses;
+
     return (
         <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
                 <OverviewCard
                     title="Total Expenses"
-                    value="15,890"
+                    value={totalExpenses.toFixed(2)}
                     icon={<BalanceIcon className="text-white" />}
                     color="bg-blue-500"
                 />
@@ -38,7 +40,7 @@ export default function OverviewCards() {
             <Grid item xs={12} md={4}>
                 <OverviewCard
                     title="Monthly Budget"
-                    value="25,000"
+                    value={monthlyBudget.toFixed(2)}
                     icon={<BudgetIcon className="text-white" />}
                     color="bg-green-500"
                 />
@@ -46,7 +48,7 @@ export default function OverviewCards() {
             <Grid item xs={12} md={4}>
                 <OverviewCard
                     title="Savings"
-                    value="9,110"
+                    value={savings.toFixed(2)}
                     icon={<SavingsIcon className="text-white" />}
                     color="bg-purple-500"
                 />
