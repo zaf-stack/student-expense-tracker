@@ -1,14 +1,24 @@
 // src/components/DailyUsage/DailyUsagePage.js
 import React, { useState, useEffect } from 'react';
-import { Grid, Paper, Typography } from '@mui/material';
+import { Grid, Paper, Typography, useMediaQuery, useTheme } from '@mui/material';
 import AddExpenseForm from './AddExpenseForm';
 import ExpenseList from './ExpenseList';
 import CategorySummary from './CategorySummary';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
 
 const STORAGE_KEY = 'dailyExpenses';
 
 export default function DailyUsagePage() {
     // Initialize state from localStorage or use empty array
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+
+
     const [expenses, setExpenses] = useState(() => {
         const savedExpenses = localStorage.getItem(STORAGE_KEY);
         return savedExpenses ? JSON.parse(savedExpenses) : [];
@@ -27,15 +37,26 @@ export default function DailyUsagePage() {
             createdAt: new Date().toISOString()
         };
         setExpenses(prevExpenses => [...prevExpenses, expenseWithId]);
-    };
 
-    // Handler for deleting expense
+        toast.success("Expense Added Successfully! ✅");
+    };
+    // ✅ Delete Expense with Confirmation
     const handleDeleteExpense = (id) => {
-        setExpenses(prevExpenses =>
-            prevExpenses.filter(expense => expense.id !== id)
-        );
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setExpenses(prevExpenses => prevExpenses.filter(expense => expense.id !== id));
+                toast.error("Expense Deleted Successfully! ❌");
+            }
+        });
     };
-
     // Handler for editing expense
     const handleEditExpense = (updatedExpense) => {
         setExpenses(prevExpenses =>
@@ -45,29 +66,29 @@ export default function DailyUsagePage() {
                     : expense
             )
         );
+
+        toast.info("Expense Updated Successfully! 🔄");
     };
 
     return (
         <div className="p-4">
-            <Grid container spacing={3}>
-                {/* Add Expense Form */}
-                <Grid item xs={12} md={4}>
-                    <Paper className="p-4">
+            <ToastContainer position="top-right" autoClose={3000} />
+            <Grid container spacing={isMobile ? 2 : 3}>
+                <Grid item xs={12} md={4} lg={3}>
+                    <Paper sx={{ p: isMobile ? 2 : 3 }}>
                         <AddExpenseForm onSubmit={handleAddExpense} />
                     </Paper>
                 </Grid>
 
-                {/* Category Summary */}
-                <Grid item xs={12} md={8}>
-                    <Paper className="p-4">
+                <Grid item xs={12} md={8} lg={9}>
+                    <Paper sx={{ p: isMobile ? 2 : 3 }}>
                         <CategorySummary expenses={expenses} />
                     </Paper>
                 </Grid>
 
-                {/* Expense List */}
                 <Grid item xs={12}>
-                    <Paper className="p-4">
-                        <Typography variant="h6" className="mb-4">
+                    <Paper sx={{ p: isMobile ? 2 : 3, overflowX: "auto" }}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>
                             Expense Listing
                         </Typography>
                         <ExpenseList

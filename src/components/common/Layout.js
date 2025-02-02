@@ -1,5 +1,5 @@
 // src/components/common/Layout.js
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     AppBar,
@@ -11,7 +11,9 @@ import {
     ListItemText,
     Typography,
     Box,
-    IconButton
+    IconButton,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -39,10 +41,39 @@ const sidebarVariants = {
 };
 
 export default function Layout({ children }) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile); // Mobile: Closed by default
+    const toggleButtonRef = useRef(null); // Ref for toggle button
 
+    // Toggle sidebar
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    // Close sidebar on mobile when a link is clicked
+    const handleLinkClick = () => {
+        if (isMobile) {
+            setIsSidebarOpen(false);
+        }
+    };
+
+    // Close sidebar when clicking outside (mobile only)
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            // Check if click is NOT on sidebar and NOT on toggle button
+            if (
+                isMobile &&
+                isSidebarOpen &&
+                !e.target.closest('.sidebar') &&
+                !e.target.closest('.toggle-button')
+            ) {
+                setIsSidebarOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isMobile, isSidebarOpen]);
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -50,6 +81,8 @@ export default function Layout({ children }) {
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
                     <IconButton
+                        className="toggle-button" // Add class for reference
+                        ref={toggleButtonRef}
                         color="inherit"
                         edge="start"
                         onClick={toggleSidebar}
@@ -76,8 +109,10 @@ export default function Layout({ children }) {
                             position: 'fixed',
                             height: '100vh',
                             overflowX: 'hidden',
-                            zIndex: 1200
+                            zIndex: 1200,
+                            pointerEvents: 'auto' // Enable clicks on sidebar
                         }}
+                        className="sidebar" // For click-outside detection
                     >
                         <Drawer
                             variant="persistent"
@@ -100,8 +135,8 @@ export default function Layout({ children }) {
                                         component={Link}
                                         to={item.path}
                                         selected={location.pathname === item.path}
+                                        onClick={handleLinkClick}
                                         sx={{
-                                            // Active Tab Highlighting
                                             backgroundColor: location.pathname === item.path ? '#e3f2fd' : 'inherit',
                                             '&:hover': { backgroundColor: '#f5f5f5' }
                                         }}
@@ -130,7 +165,7 @@ export default function Layout({ children }) {
                 sx={{
                     flexGrow: 1,
                     p: 3,
-                    marginLeft: isSidebarOpen ? `${drawerWidth}px` : 0,
+                    marginLeft: isSidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
                     transition: 'margin-left 0.3s ease-in-out'
                 }}
             >

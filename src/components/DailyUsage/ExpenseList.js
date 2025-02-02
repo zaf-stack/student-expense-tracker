@@ -141,11 +141,18 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                             exportFunc: (cols, datas) => ExportCsv(cols, datas, 'Expenses')
                         }
                     ],
+                    padding: 'dense',
                     headerStyle: {
                         backgroundColor: '#1976d2',
                         color: 'white',
-                        fontSize: '1rem'
-                    }
+                        fontSize: '0.875rem' // Smaller font on mobile
+                    },
+                    cellStyle: {
+                        fontSize: '0.875rem' // Smaller font on mobile
+                    },
+                    maxBodyHeight: '400px', // Mobile friendly scroll
+                    minBodyHeight: '200px',
+                    responsive: true // Enable responsive table
                 }}
             />
 
