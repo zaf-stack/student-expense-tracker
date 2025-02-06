@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+// import EditorTrackerPage from './components/EditorTracker/EditorTrackerPage';
 
 // Extra Pages
 const PersonalUsage = () => <div className="p-4">Personal Usage Coming Soon</div>;
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/daily-usage" element={<DailyUsagePage />} />
+                {/* <Route path="/editor-tracker" element={<EditorTrackerPage />} /> */}
                 <Route path="/personal-usage" element={<PersonalUsage />} />
                 <Route path="/emi-tracker" element={<EMITracker />} />
               </Route>

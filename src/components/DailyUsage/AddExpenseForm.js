@@ -11,10 +11,15 @@ import {
     InputAdornment,
     FormHelperText,
     Alert,
-    Box
+    Box,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, Calculate as CalculatorIcon } from '@mui/icons-material';
 import { validateExpenseForm } from '../../utils/validationUtils';
+import Calculator from './Calculator';
 
 const categories = [
     { id: 'grocery', name: 'Grocery' },
@@ -36,6 +41,8 @@ export default function AddExpenseForm({ onSubmit }) {
         description: '',
         date: new Date().toISOString().split('T')[0]
     });
+    const [openCalculator, setOpenCalculator] = useState(false);
+
 
     // const handleSubmit = (e) => {
     //     e.preventDefault();
@@ -89,94 +96,12 @@ export default function AddExpenseForm({ onSubmit }) {
             }));
         }
     };
-    // TODO: Add expense handling logic
 
-    //     setFormData({
-    //         category: '',
-    //         amount: '',
-    //         description: '',
-    //         date: new Date().toISOString().split('T')[0]
-    //     });
-    // };
-
-    // const handleChange = (e) => {
-    //     setFormData({
-    //         ...formData,
-    //         [e.target.name]: e.target.value
-    //     });
-    // };
-
+    const handleCalculatorResult = (value) => {
+        setFormData((prev) => ({ ...prev, amount: value.toString() }));
+    };
     return (
-        // <form onSubmit={handleSubmit}>
-        //     <Typography variant="h6" className="mb-4">
-        //         Add Daily Expense
-        //     </Typography>
 
-        //     <div className="space-y-4">
-        //         <FormControl fullWidth>
-        //             <InputLabel>Category</InputLabel>
-        //             <Select
-        //                 name="category"
-        //                 value={formData.category}
-        //                 label="Category"
-        //                 onChange={handleChange}
-        //                 required
-        //             >
-        //                 {categories.map(cat => (
-        //                     <MenuItem key={cat.id} value={cat.id}>
-        //                         {cat.name}
-        //                     </MenuItem>
-        //                 ))}
-        //             </Select>
-        //         </FormControl>
-
-        //         <TextField
-        //             fullWidth
-        //             label="Amount"
-        //             name="amount"
-        //             type="number"
-        //             value={formData.amount}
-        //             onChange={handleChange}
-        //             required
-        //             InputProps={{
-        //                 startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-        //             }}
-        //         />
-
-        //         <TextField
-        //             fullWidth
-        //             label="Description"
-        //             name="description"
-        //             value={formData.description}
-        //             onChange={handleChange}
-        //             multiline
-        //             rows={2}
-        //         />
-
-        //         <TextField
-        //             fullWidth
-        //             label="Date"
-        //             name="date"
-        //             type="date"
-        //             value={formData.date}
-        //             onChange={handleChange}
-        //             required
-        //             InputLabelProps={{
-        //                 shrink: true,
-        //             }}
-        //         />
-
-        //         <Button
-        //             type="submit"
-        //             variant="contained"
-        //             color="primary"
-        //             fullWidth
-        //             startIcon={<AddIcon />}
-        //         >
-        //             Add Expense
-        //         </Button>
-        //     </div>
-        // </form>
 
         <form onSubmit={handleSubmit}>
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -226,9 +151,13 @@ export default function AddExpenseForm({ onSubmit }) {
                         helperText={errors.amount}
                         InputProps={{
                             startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <CalculatorIcon onClick={() => setOpenCalculator(true)} style={{ cursor: "pointer" }} />
+                                </InputAdornment>
+                            )
                         }}
                     />
-
                     <TextField
                         fullWidth
                         label="Description"
@@ -266,6 +195,17 @@ export default function AddExpenseForm({ onSubmit }) {
                     >
                         {isSubmitting ? 'Adding...' : 'Add Expense'}
                     </Button>
+
+                    {/* Calculator Modal */}
+                    <Dialog open={openCalculator} onClose={() => setOpenCalculator(false)}>
+                        <DialogTitle>Add Multiple Amount</DialogTitle>
+                        <DialogContent>
+                            <Calculator onCalculate={handleCalculatorResult} onClose={() => setOpenCalculator(false)} />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setOpenCalculator(false)}>Close</Button>
+                        </DialogActions>
+                    </Dialog>
                 </div>
             </Box>
         </form>
