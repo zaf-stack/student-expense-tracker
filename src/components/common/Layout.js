@@ -30,8 +30,10 @@ const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Analytics', icon: <DashboardIcon />, path: '/analytics' },
     { text: 'Daily Usage', icon: <DailyIcon />, path: '/daily-usage' },
+    // { text: 'Editor Tracker', icon: <DashboardIcon />, path: '/editor-tracker' },
     { text: 'Personal Usage', icon: <PersonalIcon />, path: '/personal-usage' },
     { text: 'EMI Tracker', icon: <EMIIcon />, path: '/emi-tracker' },
+
 ];
 
 const sidebarVariants = {
