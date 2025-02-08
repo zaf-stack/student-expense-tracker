@@ -39,13 +39,13 @@ export default function CategorySummary({ expenses }) {
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" alignItems="center" mb="10px" gutterBottom>
                 Expense Distribution
             </Typography>
 
             <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: isMobile ? 250 : 300 }}>
+                    <Paper sx={{ p: 2, height: isMobile ? 330 : 300 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie

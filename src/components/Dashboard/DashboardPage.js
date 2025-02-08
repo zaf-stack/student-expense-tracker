@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Paper, Button, Modal, Box } from '@mui/material';
+import { Grid, Paper, Button, Modal, Box, Typography, TextField } from '@mui/material';
 import OverviewCards from './OverviewCards';
 import RecentTransactions from './RecentTransactions';
 import ExpenseDistribution from './ExpenseDistribution';
@@ -27,6 +27,12 @@ export default function DashboardPage() {
 
     const [open, setOpen] = useState(false); // ✅ Modal State
     const [resetForm, setResetForm] = useState(false); // ✅ Track if form should be reset
+
+    const [monthlyBudget, setMonthlyBudget] = useState(() => {
+        const saved = localStorage.getItem('monthlyBudget');
+        return saved ? Number(saved) : 20000;
+    });
+    const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false); // ✅ Budget Modal State
 
     useEffect(() => {
         const expenses = JSON.parse(localStorage.getItem('dailyExpenses') || '[]');
@@ -61,6 +67,20 @@ export default function DashboardPage() {
             recentTransactions
         });
     }, []);
+
+
+    // ✅ Add Budget Modal Style
+    const modalStyle = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        borderRadius: 2
+    };
 
     // ✅ Function to Add Expense from Dashboard
     const handleAddExpense = (newExpense) => {
@@ -112,12 +132,42 @@ export default function DashboardPage() {
                     </Button>
                 </Grid>
 
-                <Grid item xs={12}>
-                    <OverviewCards
-                        totalExpenses={dashboardData.totalExpenses}
-                        monthlyBudget={20000} // Set your budget here
-                    />
-                </Grid>
+                <OverviewCards
+                    totalExpenses={dashboardData.totalExpenses}
+                    monthlyBudget={monthlyBudget}
+                    onEditBudget={() => setIsBudgetModalOpen(true)} // ✅ Pass edit handler
+                />
+
+                {/* ✅ Add Budget Modal */}
+                <Modal
+                    open={isBudgetModalOpen}
+                    onClose={() => setIsBudgetModalOpen(false)}
+                >
+                    <Box sx={modalStyle}>
+                        <Typography variant="h6" sx={{ mb: 3 }}>
+                            Edit Monthly Budget
+                        </Typography>
+                        <TextField
+                            autoFocus
+                            fullWidth
+                            label="New Budget"
+                            type="number"
+                            value={monthlyBudget}
+                            onChange={(e) => setMonthlyBudget(Number(e.target.value))}
+                            sx={{ mb: 2 }}
+                        />
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={() => {
+                                localStorage.setItem('monthlyBudget', monthlyBudget.toString());
+                                setIsBudgetModalOpen(false);
+                            }}
+                        >
+                            Save Changes
+                        </Button>
+                    </Box>
+                </Modal>
 
                 <Grid item xs={12} md={8}>
                     <Paper className="p-4 mb-4">

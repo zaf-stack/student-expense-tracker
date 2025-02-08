@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './components/common/Layout';
@@ -50,7 +50,7 @@ function App() {
             </Route>
 
             {/* Default Redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
           </Routes>
         </AuthProvider>
       </Router>
@@ -61,15 +61,46 @@ function App() {
 }
 
 /* ✅ PublicRoute: No Sidebar for Login & Signup */
-const PublicRoute = ({ children }) => {
-  const { user } = useAuth();
-  return user ? <Navigate to="/" replace /> : children;
-};
+// const PublicRoute = ({ children }) => {
+//   const { user } = useAuth();
+//   return user ? <Navigate to="/" replace /> : children;
+// };
 
 /* ✅ ProtectedRoute: Only for Logged-In Users */
+// const ProtectedRoute = () => {
+//   const { user } = useAuth();
+//   return user ? <Outlet /> : <Navigate to="/login" replace />;
+// };
+
+/* ✅ PublicRoute: No Sidebar for Login & Signup */
+const PublicRoute = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  if (user) {
+    // ✅ Redirect to home or saved path
+    const redirectPath = localStorage.getItem('redirectPath') || '/';
+    localStorage.removeItem('redirectPath'); // Clear after use
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  return children; // Allow access to public routes
+};
+
 const ProtectedRoute = () => {
   const { user } = useAuth();
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      // ✅ Save the current path for redirect after login
+      localStorage.setItem('redirectPath', location.pathname);
+      navigate('/login');
+    }
+  }, [user, location, navigate]);
+
+  return user ? <Outlet /> : null; // Render children only if user exists
 };
 
 export default App;

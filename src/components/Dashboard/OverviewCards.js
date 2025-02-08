@@ -1,16 +1,19 @@
 import React from 'react';
-import { Grid, Paper, Typography } from '@mui/material';
+import { Grid, IconButton, Paper, Typography } from '@mui/material';
 import {
     AccountBalance as BalanceIcon,
     TrendingUp as BudgetIcon,
     Savings as SavingsIcon
 } from '@mui/icons-material';
+import SettingsIcon from '@mui/icons-material/Settings';
+
+
 
 const OverviewCard = ({ title, value, icon, color }) => (
     <Paper className="p-4 h-full">
         <div className="flex items-center justify-between">
             <div>
-                <Typography variant="subtitle2" color="textSecondary">
+                <Typography variant="subtitle2" color="textSecondary" component="div">
                     {title}
                 </Typography>
                 <Typography variant="h4" className="mt-2">
@@ -24,7 +27,7 @@ const OverviewCard = ({ title, value, icon, color }) => (
     </Paper>
 );
 
-export default function OverviewCards({ totalExpenses, monthlyBudget }) {
+export default function OverviewCards({ totalExpenses, monthlyBudget, onEditBudget }) {
     const total = Number(totalExpenses) || 0; // Ensure totalExpenses is a number
     const budget = Number(monthlyBudget) || 0; // Ensure monthlyBudget is a number
     const savings = budget - total;
@@ -42,7 +45,18 @@ export default function OverviewCards({ totalExpenses, monthlyBudget }) {
             </Grid>
             <Grid item xs={12} md={4}>
                 <OverviewCard
-                    title="Monthly Budget"
+                    title={
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <span>Monthly Budget</span>
+                            <IconButton
+                                onClick={onEditBudget}
+                                size="small"
+                                sx={{ ml: 1, p: 0 }}
+                            >
+                                <SettingsIcon fontSize="small" />
+                            </IconButton>
+                        </div>
+                    }
                     value={budget.toFixed(2)}
                     icon={<BudgetIcon className="text-white" />}
                     color="bg-green-500"

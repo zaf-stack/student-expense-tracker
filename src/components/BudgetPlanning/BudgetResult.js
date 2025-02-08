@@ -1,15 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Button, Box, Typography, Card, CardContent } from "@mui/material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-// import puppeteer from "puppeteer";
 import "tailwindcss/tailwind.css";
+import { useReactToPrint } from "react-to-print";
 
 const BudgetResult = ({ result, userData }) => {
+    // const componentRef = useRef();
+
     useEffect(() => {
         console.log("🔍 Checking userData:", userData);
         console.log("📊 Checking result:", result);
     }, [userData, result]);
+
+    // const handlePrint = useReactToPrint({
+    //     content: () => componentRef.current, // ✅ सीधे ref pass करें
+    //     documentTitle: `${userData?.name}_Budget_Plan`, // PDF का नाम
+    //     onBeforePrint: () => console.log("Printing started..."), // Optional
+    //     removeAfterPrint: true // Temporary elements clean करे
+    // });
 
     if (!userData || !result) {
         return (
@@ -19,101 +28,87 @@ const BudgetResult = ({ result, userData }) => {
         );
     }
 
-    const exportToPDF = () => {
-        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        doc.setFont("Helvetica", "normal"); // Ensure consistent font across the document
-        doc.setFontSize(16);
-
-        doc.text("Personalized Budget Plan", 20, 10);
-        doc.setFontSize(12);
-        doc.text(`Name: ${userData.name}`, 10, 20);
-        doc.text(`Location: ${userData.city}, ${userData.state}, ${userData.country}`, 10, 30);
-        doc.text(`Income: ₹${userData.income}`, 10, 40);
-        doc.text(`Saving Goal: ₹${userData.savingGoal}`, 10, 50);
-        doc.text(`Goal: ${userData.goal}`, 10, 60);
-
-        doc.setFontSize(14);
-        doc.text("Budget Plan Details:", 10, 75);
-
-        autoTable(doc, {
-            startY: 80,
-            theme: "grid",
-            head: [["Category", "Details"]],
-            body: [
-                ["Name", userData.name],
-                ["Location", `${userData.city}, ${userData.state}, ${userData.country}`],
-                ["Monthly Income", `₹${userData.income}`],
-                ["Saving Goal", `₹${userData.savingGoal}`],
-                ["Financial Goal", userData.goal]
-            ],
-            styles: { fontSize: 11, cellPadding: 6, overflow: "linebreak", halign: "left" },
-            columnStyles: { 0: { fontStyle: "bold" }, 1: { fontStyle: "normal" } },
-            margin: { top: 85 },
-            tableWidth: "auto"
-        });
-
-        doc.text("Budget Advice:", 10, doc.lastAutoTable.finalY + 10);
-        autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 15,
-            theme: "grid",
-            head: [["Advice"]],
-            body: [
-                [result.advice.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*/g, "-")]
-            ],
-            styles: { fontSize: 11, cellPadding: 6, overflow: "linebreak", halign: "left" },
-            columnStyles: { 0: { fontStyle: "normal" } },
-            margin: { top: 85 },
-            tableWidth: "auto"
-        });
-
-        doc.save("budget-plan.pdf");
+    const formatText = (text) => {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, "<strong class='text-lg'>$1</strong>") // Convert **bold text** to <strong>
+            .replace(/\* (.*?)$/gm, "👉 <span class='text-sm'>$1</span>"); // Convert list items (*) to indicate finger emoji with smaller text
     };
 
-    // const exportToPDF = async () => {
-    //     const browser = await puppeteer.launch();
-    //     const page = await browser.newPage();
-    //     const htmlContent = `
-    //         <html>
-    //         <head>
-    //             <style>
-    //                 body { font-family: 'Arial', sans-serif; padding: 20px; }
-    //                 h1 { text-align: center; font-size: 22px; }
-    //                 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    //                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    //                 th { background-color: #f4f4f4; }
-    //                 p { font-size: 14px; line-height: 1.6; }
-    //             </style>
-    //         </head>
-    //         <body>
-    //             <h1>Personalized Budget Plan</h1>
-    //             <p><strong>Name:</strong> ${userData.name}</p>
-    //             <p><strong>Location:</strong> ${userData.city}, ${userData.state}, ${userData.country}</p>
-    //             <p><strong>Income:</strong> ₹${userData.income}</p>
-    //             <p><strong>Saving Goal:</strong> ₹${userData.savingGoal}</p>
-    //             <p><strong>Goal:</strong> ${userData.goal}</p>
-    //             <h2>Budget Plan Details</h2>
-    //             <table>
-    //                 <tr><th>Category</th><th>Details</th></tr>
-    //                 <tr><td>Name</td><td>${userData.name}</td></tr>
-    //                 <tr><td>Location</td><td>${userData.city}, ${userData.state}, ${userData.country}</td></tr>
-    //                 <tr><td>Monthly Income</td><td>₹${userData.income}</td></tr>
-    //                 <tr><td>Saving Goal</td><td>₹${userData.savingGoal}</td></tr>
-    //                 <tr><td>Financial Goal</td><td>${userData.goal}</td></tr>
-    //             </table>
-    //             <h2>Budget Advice</h2>
-    //             <p>${result.advice.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*/g, "-")}</p>
-    //         </body>
-    //         </html>
-    //     `;
 
-    //     await page.setContent(htmlContent);
-    //     await page.pdf({ path: "budget-plan.pdf", format: "A4" });
-    //     await browser.close();
-    // };
+    const exportToPDF = () => {
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+            putOnlyUsedFonts: true
+        });
 
+        // Custom styling
+        const titleFontSize = 18;
+        const headerFontSize = 14;
+        const bodyFontSize = 12;
+        const margin = 15;
+        let yPos = margin;
+
+        // Main title
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(titleFontSize);
+        doc.text("Personalized Budget Plan", margin, yPos);
+        yPos += 10;
+
+        // User details
+        doc.setFontSize(bodyFontSize);
+        doc.setFont("helvetica", "normal");
+        const userDetails = [
+            `👤 Name: ${userData.name}`,
+            `📍 Location: ${userData.city}, ${userData.state}`,
+            `💰 Income: ₹${Number(userData.income).toLocaleString('en-IN')}/month`,
+            `🎯 Saving Goal: ₹${Number(userData.savingGoal).toLocaleString('en-IN')} (${userData.goalType})`,
+            `📌 Financial Goal: ${userData.goal}`
+        ];
+
+        userDetails.forEach((detail) => {
+            doc.text(detail, margin, yPos);
+            yPos += 7;
+        });
+        yPos += 10;
+
+        // Process advice text (UI के format को retain करते हुए)
+        const cleanAdvice = result.advice
+            .replace(/\*\*/g, '') // Bold हटाएं
+            .replace(/1️⃣|2️⃣|3️⃣/g, '') // नंबर emojis हटाएं
+            .replace(/👉/g, '• '); // 👉 को bullets में बदलें
+
+        // Sections को अलग करें और tables में डालें
+        const sections = cleanAdvice.split(/\n\s*\n/);
+
+        autoTable(doc, {
+            startY: yPos,
+            head: [['Budget Breakdown']],
+            body: [[cleanAdvice]],
+            theme: 'grid',
+            styles: {
+                fontSize: bodyFontSize,
+                cellPadding: 6,
+                overflow: 'linebreak',
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            },
+            margin: { left: margin, right: margin },
+            pageBreak: 'auto' // Multi-page support
+        });
+
+        // Final note
+        doc.setFont("helvetica", "italic");
+        doc.text("~ Generated using Student Expense Tracker ~", margin, doc.lastAutoTable.finalY + 10);
+
+        doc.save(`Budget-Plan-${userData.name}.pdf`);
+    };
     return (
+
         <Box className="mt-4 flex justify-center">
-            <Card className="bg-gray-100 rounded-lg shadow-lg w-full md:w-3/4 lg:w-2/3">
+            {/* <div ref={componentRef} className="w-full"> */}
+            <Card className="bg-gray-100 rounded-lg shadow-lg w-full md:w-3/4 lg:w-2/3" >
                 <CardContent>
                     <Typography variant="h5" className="font-bold text-gray-800 mb-4 text-center">
                         📊 {userData.name}'s Personalized Budget Plan
@@ -131,7 +126,7 @@ const BudgetResult = ({ result, userData }) => {
                             <br />
                             <span className="font-semibold">🎯 Goal:</span> {userData.goal}
                             <br /><br />
-                            <div className="whitespace-pre-line text-gray-700 text-lg leading-relaxed">{result.advice.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*/g, "-")}</div>
+                            <div className="whitespace-pre-line text-gray-700 text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: formatText(result.advice) }} />
                         </Typography>
                     </Box>
 
@@ -140,8 +135,20 @@ const BudgetResult = ({ result, userData }) => {
                             📄 Export as PDF
                         </Button>
                     </div>
+
                 </CardContent>
             </Card>
+            {/* </div> */}
+            {/* Print Button */}
+            {/* <div className="flex justify-center mt-5">
+                <Button
+                    variant="contained"
+                    onClick={handlePrint}
+                    disabled={!componentRef.current} // ✅ Ref के set होने तक disable
+                >
+                    🖨 Print or Save as PDF
+                </Button>
+            </div> */}
         </Box>
     );
 };

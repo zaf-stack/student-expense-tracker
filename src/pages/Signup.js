@@ -9,9 +9,9 @@ export default function Signup() {
     const { signup, user } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        user && navigate('/');
-    }, [user]);
+    // useEffect(() => {
+    //     user && navigate('/');
+    // }, [user]);
 
     const onSubmit = async (data) => {
         try {

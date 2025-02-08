@@ -107,13 +107,18 @@ export default function Layout({ children }) {
             </AppBar>
 
             {/* Mobile App Bar */}
-            <AppBar position="sticky" sx={{ display: { xs: 'block', md: 'none' } }}>
+            <AppBar position="sticky" sx={{
+                display: { xs: 'block', md: 'none' },
+                zIndex: 1200,
+                width: '100%', // Ensure it takes full width
+                maxWidth: '100%', // Prevent overflow
+                overflowX: 'hidden' // Hide horizontal overflow
+            }}>
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         {mobileItems[mobileNavValue].text}
                     </Typography>
                     {user && (
-
                         <IconButton color="inherit" onClick={logout}>
                             Logout ({user.email})
                         </IconButton>

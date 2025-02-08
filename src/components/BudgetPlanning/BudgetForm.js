@@ -148,7 +148,7 @@ const BudgetForm = ({ onSubmit }) => {
                 <Grid item xs={12} md={2}>
                     <TextField fullWidth label="Transportation (₹)" type="number" {...register("transportation")} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ mb: 6, }}>
                     <Button type="submit" variant="contained" color="primary"> Generate Budget Plan</Button>
                 </Grid>
             </Grid>

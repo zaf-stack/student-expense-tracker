@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import EditIcon from '@mui/icons-material/Edit';
 import CategoryIcon from '@mui/icons-material/Category';
-import { Money } from '@mui/icons-material';
+import { DeleteOutline, Money } from '@mui/icons-material';
 
 const STORAGE_KEY = 'dailyExpenses';
 
@@ -79,14 +79,8 @@ export default function DailyUsagePage() {
                         <AddExpenseForm onSubmit={handleAddExpense} />
                     </Paper>
                 </Grid>
-
-                <Grid item xs={12} md={8} lg={9}>
-                    <Paper sx={{ p: isMobile ? 2 : 3 }}>
-                        <CategorySummary expenses={expenses} />
-                    </Paper>
-                </Grid>
-
                 {/* Recent Transactions Component - Only on Mobile */}
+
                 {isMobile && (
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2, borderRadius: 3, mb: 2 }}>
@@ -96,31 +90,46 @@ export default function DailyUsagePage() {
                             <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 Show Full Table <Switch checked={showExpenseTable} onChange={() => setShowExpenseTable(!showExpenseTable)} />
                             </Typography>
-                            {expenses.slice(0, 4).map((expense) => (
-                                <Paper key={expense.id} sx={{ p: 2, mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 2 }}>
-                                    <IconButton>
-                                        <Money color="action" />
-                                    </IconButton>
-                                    <div>
-                                        <Typography variant="body1" fontWeight="bold">
-                                            ₹{expense.amount}
-                                        </Typography>
+                            {expenses
+                                .slice() // Create a copy of the array
+                                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date (newest first)
+                                .slice(0, 4) // Take the first 4 items
+                                .map((expense) => (
+                                    <Paper key={expense.id} sx={{ p: 2, mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 2 }}>
+                                        <IconButton>
+                                            <Money color="action" />
+                                        </IconButton>
+                                        <div>
+                                            <Typography variant="body1" fontWeight="bold">
+                                                ₹{expense.amount}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                {expense.description || 'No description'}
+                                            </Typography>
+                                        </div>
                                         <Typography variant="body2" color="textSecondary">
-                                            {expense.description || 'No description'}
+                                            {new Date(expense.createdAt).toLocaleDateString()}
                                         </Typography>
-                                    </div>
-                                    <Typography variant="body2" color="textSecondary">
-                                        {new Date(expense.createdAt).toLocaleDateString()}
-                                    </Typography>
-                                    <IconButton onClick={() => { setSelectedExpense(expense); setEditModalOpen(true); }}>
-                                        <EditIcon color="primary" />
-                                    </IconButton>
-                                </Paper>
-                            ))}
+                                        <IconButton onClick={() => { setSelectedExpense(expense); setEditModalOpen(true); }}>
+                                            <EditIcon color="primary" />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDeleteExpense(expense.id)}>
+                                            <DeleteOutline color="error" />
+                                        </IconButton>
+                                    </Paper>
+                                ))}
 
                         </Paper>
                     </Grid>
                 )}
+
+
+                <Grid item xs={12} md={8} lg={9}>
+                    <Paper sx={{ p: isMobile ? 2 : 3 }}>
+                        <CategorySummary expenses={expenses} />
+                    </Paper>
+                </Grid>
+
 
                 {/* Show Material Table only if toggle is ON with Scrollable Container */}
                 {(showExpenseTable || !isMobile) && (
