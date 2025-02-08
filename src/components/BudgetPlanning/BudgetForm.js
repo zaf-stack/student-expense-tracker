@@ -6,27 +6,45 @@ const BudgetForm = ({ onSubmit }) => {
     const { register, handleSubmit, watch, formState: { errors } } = useForm();
     const watchLiving = watch("living"); // Watch living status
     const watchDebt = watch("hasDebt"); // Watch debt status
+    const watchLanguage = watch("language"); // Watch debt status
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
                 {/* Basic User Information */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={6} md={6}>
                     <TextField fullWidth label="Full Name" {...register("name", { required: "Name is required" })} />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                {/* <Grid item xs={6} md={6}>
                     <TextField fullWidth label="User Language" {...register("language", { required: "Language is required" })} />
+                </Grid> */}
+
+                <Grid item xs={6} md={6}>
+                    <FormControl fullWidth >
+                        <InputLabel>Your Language</InputLabel>
+                        <Select defaultValue="hinglish" {...register("language")}>
+                            <MenuItem value="hinglish">Hinglish</MenuItem>
+                            <MenuItem value="english">English</MenuItem>
+                            <MenuItem value="hindi">Hindi</MenuItem>
+                            <MenuItem value="other">Other</MenuItem>
+                        </Select>
+                    </FormControl>
                 </Grid>
+                {watchLanguage === "other" && (
+                    <Grid item xs={12} md={6}>
+                        <TextField fullWidth label="Choose language"  {...register("chooselanguage")} />
+                    </Grid>
+                )}
                 <Grid item xs={12} md={4}>
                     <TextField fullWidth label="Country" {...register("country", { required: "Country is required" })} />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={6} md={4}>
                     <TextField fullWidth label="State" {...register("state", { required: "State is required" })} />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={6} md={4}>
                     <TextField fullWidth label="City" {...register("city", { required: "City is required" })} />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={6} md={3}>
                     <FormControl fullWidth>
                         <InputLabel>User Type</InputLabel>
                         <Select defaultValue="student" {...register("userType")}>
@@ -36,10 +54,10 @@ const BudgetForm = ({ onSubmit }) => {
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={6} md={3}>
                     <TextField fullWidth label="Age" type="number" {...register("age", { required: "Age is required" })} />
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={6} md={3}>
                     <FormControl fullWidth>
                         <InputLabel>Gender</InputLabel>
                         <Select defaultValue="other" {...register("gender")}>
@@ -49,7 +67,8 @@ const BudgetForm = ({ onSubmit }) => {
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={6}>
+
+                <Grid item xs={6} md={3}>
                     <FormControl fullWidth>
                         <InputLabel>Marital Status</InputLabel>
                         <Select defaultValue="single" {...register("maritalStatus")}>
@@ -59,7 +78,7 @@ const BudgetForm = ({ onSubmit }) => {
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={2}>
                     <FormControl fullWidth>
                         <InputLabel>Living Situation</InputLabel>
                         <Select defaultValue="own" {...register("living")}>
@@ -69,19 +88,19 @@ const BudgetForm = ({ onSubmit }) => {
                     </FormControl>
                 </Grid>
                 {watchLiving === "rent" && (
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={2}>
                         <TextField fullWidth label="Monthly Rent (₹)" type="number" {...register("rentAmount")} />
                     </Grid>
                 )}
 
                 {/* Financial Details */}
-                <Grid item xs={12} md={6}>
-                    <TextField fullWidth label="Monthly Income (₹)" type="number" {...register("income", { required: "Income is required" })} />
+                <Grid item xs={12} md={2}>
+                    <TextField fullWidth label="Monthly Budget(₹)" type="number" {...register("income", { required: "Income is required" })} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                    <TextField fullWidth label="Monthly Saving Goal (₹)" type="number" {...register("savingGoal", { required: "Saving goal is required" })} />
+                <Grid item xs={12} md={4}>
+                    <TextField fullWidth label="Monthly/Yearly Saving Goal (₹)" type="number" {...register("savingGoal", { required: "Saving goal is required" })} />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={2}>
                     <FormControl fullWidth>
                         <InputLabel>Goal Type</InputLabel>
                         <Select defaultValue="monthly" {...register("goalType")}>
@@ -91,11 +110,11 @@ const BudgetForm = ({ onSubmit }) => {
                     </FormControl>
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Financial Goal (e.g., Buy a house, Travel, Save for Car)" {...register("goal", { required: "Goal is required" })} />
+                    <TextField fullWidth label="Financial Goal (e.g., Buy a mobile, Travel, Save for Car)" {...register("goal", { required: "Goal is required" })} />
                 </Grid>
 
                 {/* Additional Financial Inputs */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={2}>
                     <FormControl fullWidth>
                         <InputLabel>Do you have any Loans/Debt?</InputLabel>
                         <Select defaultValue="no" {...register("hasDebt")}>
@@ -105,15 +124,15 @@ const BudgetForm = ({ onSubmit }) => {
                     </FormControl>
                 </Grid>
                 {watchDebt === "yes" && (
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={2}>
                         <TextField fullWidth label="Loan EMI (₹)" type="number" {...register("loanEMI")} />
                     </Grid>
                 )}
 
-                <Grid item xs={12} md={6}>
+                <Grid item xs={6} md={2}>
                     <TextField fullWidth label="Emergency Fund (₹)" type="number" {...register("emergencyFund")} />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={6} md={2}>
                     <FormControl fullWidth>
                         <InputLabel>Spending Habits</InputLabel>
                         <Select defaultValue="moderate" {...register("spendingHabits")}>
@@ -123,8 +142,14 @@ const BudgetForm = ({ onSubmit }) => {
                         </Select>
                     </FormControl>
                 </Grid>
+                <Grid item xs={12} md={4}>
+                    <TextField fullWidth label="Water/Electricity/Mobile-bill (₹)" type="number" {...register("utilities")} />
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <TextField fullWidth label="Transportation (₹)" type="number" {...register("transportation")} />
+                </Grid>
                 <Grid item xs={12}>
-                    <Button type="submit" variant="contained" color="primary">Generate Budget Plan</Button>
+                    <Button type="submit" variant="contained" color="primary"> Generate Budget Plan</Button>
                 </Grid>
             </Grid>
         </form>

@@ -50,6 +50,8 @@ export const getBudgetAdvice = async (userData) => {
                                 - Living Situation: ${userData.living} ${userData.living === "rent" ? `(Rent: ₹${userData.rentAmount})` : ""}
                                 - Has Debt/Loan: ${userData.hasDebt} ${userData.hasDebt === "yes" ? `(EMI: ₹${userData.loanEMI})` : ""}
                                 - Emergency Fund: ₹${userData.emergencyFund}
+                                - Water/Electricity/Mobile-bill : ₹${userData.utilities}
+                                - Transportation : ₹${userData.transportation}
                                 
                                 **Spending & Saving Habits:**
                                 - Spending Habits: ${userData.spendingHabits}

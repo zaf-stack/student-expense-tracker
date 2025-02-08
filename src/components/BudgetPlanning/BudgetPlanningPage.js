@@ -21,6 +21,7 @@ const BudgetPlanningPage = () => {
                 advice,
                 name: data.name,
                 language: data.language,
+                chooselanguage: data.chooselanguage,
                 country: data.country,
                 state: data.state,
                 city: data.city,
@@ -37,7 +38,9 @@ const BudgetPlanningPage = () => {
                 hasDebt: data.hasDebt,
                 loanEMI: data.loanEMI || 0,
                 emergencyFund: data.emergencyFund,
-                spendingHabits: data.spendingHabits
+                spendingHabits: data.spendingHabits,
+                utilities: data.utilities,
+                transportation: data.transportation
             });
         } catch (err) {
             setError("Failed to fetch budget advice.");
@@ -47,13 +50,15 @@ const BudgetPlanningPage = () => {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4">Personalized Budget Planning</Typography>
-            {error && <Alert severity="error">{error}</Alert>}
-            <BudgetForm onSubmit={onSubmit} />
-            {loading && <CircularProgress />}
-            {result && userData && <BudgetResult result={result} userData={userData} />}
-        </Box>
+        <div>
+            <Box sx={{ p: 1 }}>
+                <Typography variant="h4" textAlign="center" sx={{ mb: 2 }}>Personalized Budget Planning</Typography>
+                {error && <Alert severity="error">{error}</Alert>}
+                <BudgetForm onSubmit={onSubmit} />
+                {loading && <CircularProgress />}
+
+            </Box>
+            {result && userData && <BudgetResult result={result} userData={userData} />}</div>
     );
 };
 

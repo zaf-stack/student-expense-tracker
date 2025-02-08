@@ -31,6 +31,7 @@ import {
     Home,
     AccountCircle
 } from '@mui/icons-material';
+import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
@@ -47,8 +48,8 @@ const menuItems = [
 const mobileItems = [
     { text: 'Home', icon: <Home />, path: '/' },
     { text: 'Analysis', icon: <Analytics />, path: '/analytics' },
-    { text: 'Add', icon: <AddCircleOutline fontSize="large" color='primary' />, path: '/add-expense' },
-    { text: 'Account', icon: <DailyIcon />, path: '/daily-usage' },
+    { text: 'Add', icon: <AddCircleOutline fontSize="large" color='primary' />, path: '/daily-usage' },
+    { text: 'Advisor', icon: <FaceRetouchingNaturalIcon />, path: '/budget-planning' },
     { text: 'More', icon: <MoreHoriz />, path: null },
 ];
 
