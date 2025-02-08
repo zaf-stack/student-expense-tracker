@@ -9,8 +9,6 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useTheme, useMediaQuery } from '@mui/material';
 
-
-
 const categories = {
     grocery: 'Grocery',
     vegetables: 'Vegetables',
@@ -19,25 +17,21 @@ const categories = {
     outside_food: 'Outside Food'
 };
 
-// const COLORS = ['#1976d2', '#2196f3', '#64b5f6', '#90caf9', '#bbdefb'];
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-export default function CategorySummary({ expenses, }) {
-
+export default function CategorySummary({ expenses }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    // Calculate category-wise totals
     const categoryTotals = expenses.reduce((acc, expense) => {
         const category = categories[expense.category] || expense.category;
-        acc[category] = (acc[category] || 0) + expense.amount;
+        acc[category] = (acc[category] || 0) + (expense.amount || 0); // Ensure amount is a number
         return acc;
     }, {});
 
-    // Convert to array for charts
     const chartData = Object.entries(categoryTotals).map(([name, value], index) => ({
         name,
-        value,
+        value: Number(value) || 0, // Ensure value is always a number
         color: COLORS[index % COLORS.length]
     }));
 
@@ -50,12 +44,8 @@ export default function CategorySummary({ expenses, }) {
             </Typography>
 
             <Grid container spacing={2}>
-                {/* Pie Chart */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{
-                        p: 2,
-                        height: isMobile ? 250 : 300
-                    }}>
+                    <Paper sx={{ p: 2, height: isMobile ? 250 : 300 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
@@ -73,7 +63,7 @@ export default function CategorySummary({ expenses, }) {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value) => `₹${value.toFixed(2)}`}
+                                    formatter={(value) => `₹${Number(value).toFixed(2)}`} // Ensure valid number
                                 />
                                 <Legend />
                             </PieChart>
@@ -81,7 +71,6 @@ export default function CategorySummary({ expenses, }) {
                     </Paper>
                 </Grid>
 
-                {/* Category Breakdown */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2 }}>
                         <Typography variant="subtitle1" gutterBottom>
@@ -92,11 +81,13 @@ export default function CategorySummary({ expenses, }) {
                                 <Box key={category.name} sx={{ mb: 2 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                         <Typography>{category.name}</Typography>
-                                        <Typography>₹{category.value.toFixed(2)}</Typography>
+                                        <Typography>
+                                            ₹{Number(category.value).toFixed(2)} {/* Ensure valid number */}
+                                        </Typography>
                                     </Box>
                                     <LinearProgress
                                         variant="determinate"
-                                        value={(category.value / totalExpense) * 100}
+                                        value={totalExpense > 0 ? (category.value / totalExpense) * 100 : 0}
                                         sx={{
                                             height: 8,
                                             borderRadius: 5,

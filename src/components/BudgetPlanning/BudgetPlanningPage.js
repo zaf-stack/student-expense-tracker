@@ -19,14 +19,25 @@ const BudgetPlanningPage = () => {
             const advice = await getBudgetAdvice(data);
             setResult({
                 advice,
-                income: data.income,
-                savingGoal: data.savingGoal,
                 name: data.name,
+                language: data.language,
                 country: data.country,
                 state: data.state,
                 city: data.city,
+                userType: data.userType,
+                age: data.age,
+                gender: data.gender,
+                maritalStatus: data.maritalStatus,
+                living: data.living,
+                rentAmount: data.rentAmount || 0,
+                income: data.income,
+                savingGoal: data.savingGoal,
                 goalType: data.goalType,
-                financialGoal: data.financialGoal
+                financialGoal: data.goal,
+                hasDebt: data.hasDebt,
+                loanEMI: data.loanEMI || 0,
+                emergencyFund: data.emergencyFund,
+                spendingHabits: data.spendingHabits
             });
         } catch (err) {
             setError("Failed to fetch budget advice.");

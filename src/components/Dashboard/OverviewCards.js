@@ -25,14 +25,17 @@ const OverviewCard = ({ title, value, icon, color }) => (
 );
 
 export default function OverviewCards({ totalExpenses, monthlyBudget }) {
-    const savings = monthlyBudget - totalExpenses;
+    const total = Number(totalExpenses) || 0; // Ensure totalExpenses is a number
+    const budget = Number(monthlyBudget) || 0; // Ensure monthlyBudget is a number
+    const savings = budget - total;
+    // const savings = monthlyBudget - totalExpenses;
 
     return (
         <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
                 <OverviewCard
                     title="Total Expenses"
-                    value={totalExpenses.toFixed(2)}
+                    value={total.toFixed(2)}
                     icon={<BalanceIcon className="text-white" />}
                     color="bg-blue-500"
                 />
@@ -40,7 +43,7 @@ export default function OverviewCards({ totalExpenses, monthlyBudget }) {
             <Grid item xs={12} md={4}>
                 <OverviewCard
                     title="Monthly Budget"
-                    value={monthlyBudget.toFixed(2)}
+                    value={budget.toFixed(2)}
                     icon={<BudgetIcon className="text-white" />}
                     color="bg-green-500"
                 />
