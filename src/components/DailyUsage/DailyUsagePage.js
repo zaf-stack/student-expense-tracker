@@ -1,35 +1,36 @@
-// src/components/DailyUsage/DailyUsagePage.js
 import React, { useState, useEffect } from 'react';
-import { Grid, Paper, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Grid, Paper, Typography, IconButton, Switch, useMediaQuery, useTheme } from '@mui/material';
 import AddExpenseForm from './AddExpenseForm';
 import ExpenseList from './ExpenseList';
 import CategorySummary from './CategorySummary';
+import EditExpenseModal from './EditExpenseModal';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import EditIcon from '@mui/icons-material/Edit';
+import CategoryIcon from '@mui/icons-material/Category';
+import { Money } from '@mui/icons-material';
 
 const STORAGE_KEY = 'dailyExpenses';
 
 export default function DailyUsagePage() {
-    // Initialize state from localStorage or use empty array
-
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-
-
 
     const [expenses, setExpenses] = useState(() => {
         const savedExpenses = localStorage.getItem(STORAGE_KEY);
         return savedExpenses ? JSON.parse(savedExpenses) : [];
     });
 
-    // Save to localStorage whenever expenses change
+    const [selectedExpense, setSelectedExpense] = useState(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [showExpenseTable, setShowExpenseTable] = useState(false);
+
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
     }, [expenses]);
 
-    // Handler for adding new expense
     const handleAddExpense = (newExpense) => {
         const expenseWithId = {
             ...newExpense,
@@ -37,10 +38,9 @@ export default function DailyUsagePage() {
             createdAt: new Date().toISOString()
         };
         setExpenses(prevExpenses => [...prevExpenses, expenseWithId]);
-
         toast.success("Expense Added Successfully! ✅");
     };
-    // ✅ Delete Expense with Confirmation
+
     const handleDeleteExpense = (id) => {
         Swal.fire({
             title: "Are you sure?",
@@ -57,7 +57,7 @@ export default function DailyUsagePage() {
             }
         });
     };
-    // Handler for editing expense
+
     const handleEditExpense = (updatedExpense) => {
         setExpenses(prevExpenses =>
             prevExpenses.map(expense =>
@@ -66,8 +66,8 @@ export default function DailyUsagePage() {
                     : expense
             )
         );
-
         toast.info("Expense Updated Successfully! 🔄");
+        setEditModalOpen(false);
     };
 
     return (
@@ -86,19 +86,68 @@ export default function DailyUsagePage() {
                     </Paper>
                 </Grid>
 
-                <Grid item xs={12}>
-                    <Paper sx={{ p: isMobile ? 2 : 3, overflowX: "auto" }}>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            Expense Listing
-                        </Typography>
-                        <ExpenseList
-                            expenses={expenses}
-                            onDelete={handleDeleteExpense}
-                            onEdit={handleEditExpense}
-                        />
-                    </Paper>
-                </Grid>
+                {/* Recent Transactions Component - Only on Mobile */}
+                {isMobile && (
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: 2, borderRadius: 3, mb: 2 }}>
+                            <Typography variant="h6" sx={{ mb: 1 }}>
+                                Recent Transactions
+                            </Typography>
+                            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                Show Full Table <Switch checked={showExpenseTable} onChange={() => setShowExpenseTable(!showExpenseTable)} />
+                            </Typography>
+                            {expenses.slice(0, 4).map((expense) => (
+                                <Paper key={expense.id} sx={{ p: 2, mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 2 }}>
+                                    <IconButton>
+                                        <Money color="action" />
+                                    </IconButton>
+                                    <div>
+                                        <Typography variant="body1" fontWeight="bold">
+                                            ₹{expense.amount}
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary">
+                                            {expense.description || 'No description'}
+                                        </Typography>
+                                    </div>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {new Date(expense.createdAt).toLocaleDateString()}
+                                    </Typography>
+                                    <IconButton onClick={() => { setSelectedExpense(expense); setEditModalOpen(true); }}>
+                                        <EditIcon color="primary" />
+                                    </IconButton>
+                                </Paper>
+                            ))}
+
+                        </Paper>
+                    </Grid>
+                )}
+
+                {/* Show Material Table only if toggle is ON with Scrollable Container */}
+                {(showExpenseTable || !isMobile) && (
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: isMobile ? 2 : 3, overflowX: 'auto', maxWidth: '100%' }}>
+                            <Typography variant="h6" sx={{ mb: 2 }}>
+                                Expense Listing
+                            </Typography>
+                            <div style={{ width: '100%', overflowX: 'auto' }}>
+                                <ExpenseList
+                                    expenses={expenses}
+                                    onDelete={handleDeleteExpense}
+                                    onEdit={handleEditExpense}
+                                />
+                            </div>
+                        </Paper>
+                    </Grid>
+                )}
             </Grid>
+
+            {/* Edit Expense Modal */}
+            <EditExpenseModal
+                open={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                expense={selectedExpense}
+                onSave={handleEditExpense}
+            />
         </div>
     );
 }
