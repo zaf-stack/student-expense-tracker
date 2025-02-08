@@ -12,7 +12,10 @@ import {
     IconButton,
     Button,
     useMediaQuery,
-    useTheme
+    useTheme,
+    BottomNavigation,
+    BottomNavigationAction,
+    Paper
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -20,55 +23,70 @@ import {
     Person as PersonalIcon,
     AccountBalance as EMIIcon,
     Menu as MenuIcon,
-    ChevronLeft as CloseIcon
+    ChevronLeft as CloseIcon,
+    AccountBalanceWallet,
+    AddCircleOutline,
+    MoreHoriz,
+    Analytics,
+    Home,
+    AccountCircle
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 const drawerWidth = 240;
 const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Analytics', icon: <DashboardIcon />, path: '/analytics' },
+    { text: 'Dashboard', icon: <Home />, path: '/' },
+    { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
     { text: 'Daily Usage', icon: <DailyIcon />, path: '/daily-usage' },
-    // { text: 'Editor Tracker', icon: <DashboardIcon />, path: '/editor-tracker' },
+    { text: 'Budget Planning', icon: <AccountBalanceWallet />, path: '/budget-planning' },
     { text: 'Personal Usage', icon: <PersonalIcon />, path: '/personal-usage' },
     { text: 'EMI Tracker', icon: <EMIIcon />, path: '/emi-tracker' },
-
 ];
 
-const sidebarVariants = {
-    open: { width: drawerWidth, opacity: 1 },
-    closed: { width: 0, opacity: 0 }
-};
+const mobileItems = [
+    { text: 'Home', icon: <Home />, path: '/' },
+    { text: 'Analysis', icon: <Analytics />, path: '/analytics' },
+    { text: 'Add', icon: <AddCircleOutline fontSize="large" color='primary' />, path: '/add-expense' },
+    { text: 'Account', icon: <DailyIcon />, path: '/daily-usage' },
+    { text: 'More', icon: <MoreHoriz />, path: null },
+];
 
 export default function Layout({ children }) {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { user, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
     const location = useLocation();
     const navigate = useNavigate();
+    const [mobileNavValue, setMobileNavValue] = useState(0);
+    const [addExpenseClicked, setAddExpenseClicked] = useState(false);
 
-    const handleLinkClick = () => isMobile && setIsSidebarOpen(false);
+    const handleMobileNavChange = (event, newValue) => {
+        if (mobileItems[newValue].path === null) {
+            setIsSidebarOpen(true);
+            return;
+        }
+        setMobileNavValue(newValue);
+        navigate(mobileItems[newValue].path);
+    };
+
+    // ✅ Handle + icon click
+    const handleAddExpenseClick = () => {
+        setAddExpenseClicked(prev => !prev); // Toggle state to trigger useEffect in DashboardPage
+    };
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (isMobile && isSidebarOpen &&
-                !e.target.closest('.sidebar') &&
-                !e.target.closest('.toggle-button')) {
-                setIsSidebarOpen(false);
-            }
-        };
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [isMobile, isSidebarOpen]);
+        const currentIndex = mobileItems.findIndex(item => item.path === location.pathname);
+        if (currentIndex > -1) setMobileNavValue(currentIndex);
+    }, [location]);
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {/* Desktop App Bar */}
+            <AppBar position="sticky" sx={{ display: { xs: 'none', md: 'block' }, zIndex: 1200 }}>
                 <Toolbar>
                     <IconButton
-                        className="toggle-button"
                         color="inherit"
                         edge="start"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -87,26 +105,39 @@ export default function Layout({ children }) {
                 </Toolbar>
             </AppBar>
 
-            <AnimatePresence>
-                {isSidebarOpen && (
-                    <motion.div
-                        initial={isMobile ? "closed" : "open"}
-                        animate="open"
-                        exit="closed"
-                        variants={sidebarVariants}
-                        transition={{ type: 'spring', stiffness: 800, damping: 80 }}
-                        className="sidebar"
-                        style={{
-                            position: 'fixed',
-                            height: '100vh',
-                            overflowX: 'hidden',
-                            zIndex: 1200,
-                            pointerEvents: 'auto',
-                            backgroundColor: theme.palette.background.paper,
-                            boxShadow: theme.shadows[4]
-                        }}
-                    >
-                        <Toolbar />
+            {/* Mobile App Bar */}
+            <AppBar position="sticky" sx={{ display: { xs: 'block', md: 'none' } }}>
+                <Toolbar>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        {mobileItems[mobileNavValue].text}
+                    </Typography>
+                    {user && (
+
+                        <IconButton color="inherit" onClick={logout}>
+                            Logout ({user.email})
+                        </IconButton>
+                    )}
+                </Toolbar>
+            </AppBar>
+
+            {/* Main Content */}
+            <Box sx={{
+                display: 'flex',
+                flexGrow: 1,
+                marginLeft: { md: isSidebarOpen ? `${drawerWidth}px` : 0 },
+                transition: 'margin-left 0.3s',
+                pt: 2
+            }}>
+                {/* Desktop Sidebar */}
+                {!isMobile && (
+                    <Box sx={{
+                        width: drawerWidth,
+                        position: 'fixed',
+                        left: 0,
+                        height: '100%',
+                        bgcolor: 'background.paper',
+                        borderRight: '1px solid rgba(0, 0, 0, 0.12)'
+                    }}>
                         <List>
                             {menuItems.map((item) => (
                                 <ListItem
@@ -115,10 +146,9 @@ export default function Layout({ children }) {
                                     component={Link}
                                     to={item.path}
                                     selected={location.pathname === item.path}
-                                    onClick={handleLinkClick}
                                     sx={{
-                                        backgroundColor: location.pathname === item.path ? '#e3f2fd' : 'inherit',
-                                        '&:hover': { backgroundColor: '#f5f5f5' }
+                                        bgcolor: location.pathname === item.path ? '#e3f2fd' : 'inherit',
+                                        '&:hover': { bgcolor: '#f5f5f5' }
                                     }}
                                 >
                                     <ListItemIcon sx={{ color: location.pathname === item.path ? '#1976d2' : 'inherit' }}>
@@ -128,26 +158,135 @@ export default function Layout({ children }) {
                                         primary={item.text}
                                         primaryTypographyProps={{
                                             fontWeight: location.pathname === item.path ? 'bold' : 'normal',
-                                            color: location.pathname === item.path ? '#1976d2' : 'inherit'
                                         }}
                                     />
                                 </ListItem>
                             ))}
                         </List>
-                    </motion.div>
+                    </Box>
                 )}
-            </AnimatePresence>
 
-            <Box component="main" sx={{
-                flexGrow: 1,
-                p: 3,
-                marginLeft: isSidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
-                transition: 'margin-left 0.3s ease-in-out'
-            }}>
-                <Toolbar />
-                {children}
-                <Outlet />
+                {/* Mobile Sidebar */}
+                <AnimatePresence>
+                    {isMobile && isSidebarOpen && (
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: 'tween' }}
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                height: '100%',
+                                width: '70%',
+                                zIndex: 1300,
+                                backgroundColor: theme.palette.background.paper,
+                                boxShadow: theme.shadows[16]
+                            }}
+                        >
+                            <Box sx={{ pt: 8, px: 2 }}>
+                                <List>
+                                    {menuItems.map((item) => (
+                                        <ListItem
+                                            button
+                                            key={item.text}
+                                            component={Link}
+                                            to={item.path}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            sx={{
+                                                borderRadius: 2,
+                                                mb: 1,
+                                                bgcolor: location.pathname === item.path ? '#e3f2fd' : 'inherit'
+                                            }}
+                                        >
+                                            <ListItemIcon>{item.icon}</ListItemIcon>
+                                            <ListItemText primary={item.text} />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Content Area */}
+                <Box component="main" sx={{
+                    flexGrow: 1,
+                    p: { xs: 2, md: 3 },
+                    width: { md: `calc(100% - ${drawerWidth}px)` }
+                }}>
+                    {children}
+                    <Outlet />
+                </Box>
             </Box>
+
+            {/* Mobile Bottom Navigation */}
+            {/* {isMobile && (
+                <Paper sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 1200,
+                    borderTop: '1px solid rgba(0, 0, 0, 0.12)'
+                }} elevation={3}>
+                    <BottomNavigation
+                        showLabels
+                        value={mobileNavValue}
+                        onChange={handleMobileNavChange}
+                    >
+                        {mobileItems.map((item, index) => (
+                            <BottomNavigationAction
+                                key={item.text}
+                                label={item.text}
+                                icon={item.icon}
+                                sx={{
+                                    '& .MuiBottomNavigationAction-label': {
+                                        fontSize: '0.75rem'
+                                    }
+                                }}
+                            />
+                        ))}
+                    </BottomNavigation>
+                </Paper>
+            )} */}
+            {isMobile && (
+                <Paper sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 1200,
+                    borderTop: '1px solid rgba(0, 0, 0, 0.12)'
+                }} elevation={3}>
+                    <BottomNavigation
+                        showLabels
+                        value={mobileNavValue}
+                        onChange={handleMobileNavChange}
+                    >
+                        {mobileItems.map((item, index) => (
+                            <BottomNavigationAction
+                                key={item.text}
+                                label={item.text}
+                                icon={item.icon}
+                                onClick={item.text === 'Add' ? handleAddExpenseClick : null} // ✅ Handle + icon click
+                                sx={{
+                                    '& .MuiBottomNavigationAction-label': {
+                                        fontSize: '0.75rem'
+                                    }
+                                }}
+                            />
+                        ))}
+                    </BottomNavigation>
+                </Paper>
+            )}
+
+            {/* Pass addExpenseClicked state to DashboardPage */}
+            {React.isValidElement(children)
+                ? React.cloneElement(children, { onAddExpenseClick: addExpenseClicked })
+                : children}
+
         </Box>
     );
 }

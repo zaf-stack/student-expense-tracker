@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import BudgetPlanningPage from './components/BudgetPlanning/BudgetPlanningPage';
 // import EditorTrackerPage from './components/EditorTracker/EditorTrackerPage';
 
 // Extra Pages
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/daily-usage" element={<DailyUsagePage />} />
                 {/* <Route path="/editor-tracker" element={<EditorTrackerPage />} /> */}
+                <Route path="/budget-planning" element={<BudgetPlanningPage />} />
                 <Route path="/personal-usage" element={<PersonalUsage />} />
                 <Route path="/emi-tracker" element={<EMITracker />} />
               </Route>
