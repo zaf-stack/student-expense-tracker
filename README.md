@@ -1,70 +1,112 @@
-# Getting Started with Create React App
+# Student Expense Manager 🎓💰
+**Current Project Status - January 24, 2026**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This document tracks the current state of the Student Expense Manager application. It serves as a baseline to understand existing features, the user interface, and functional capabilities before further development.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Key Features Overview
 
-### `npm start`
+### 1. Authentication & Security
+**Current State:** Fully implemented.
+- **Login Page:** Allows users to sign in.
+- **Signup Page:** Registration for new users.
+- **Security:** Routes are protected; users cannot access the dashboard without logging in. unauthenticated users are redirected to `/login`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![Login Page](screenshots/login.png)
+*Login Page Interface*
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+![Signup Page](screenshots/signup.png)
+*Signup Page Interface*
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Dashboard (Home)
+**Current State:** The central hub of the application.
+- **Overview Cards:** Displays key metrics like Total Budget, Total Expenses, and Remaining Balance.
+- **Expense Distribution:** Visual breakdown of expenses (likely a Pie Chart).
+- **Monthly Trend:** A graph showing spending changes over time.
+- **Recent Transactions:** A list of the latest expenses added by the user.
 
-### `npm run build`
+![Dashboard Overview](screenshots/dashboard.png)
+*Dashboard showing real-time overview and charts*
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Daily Usage
+**Current State:** For tracking day-to-day spending.
+- **Add Expense Form:** Interface to input new expenses (Amount, Category, Date, etc.).
+- **Expense List:** Detailed history of all entered expenses.
+- **Edit/Delete:** Users can modify existing entries via a modal.
+- **Calculator:** Built-in tool for quick calculations while adding expenses.
+- **Category Summary:** aggregated view of spending by category.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+![Daily Usage Page](screenshots/daily-usage.png)
+*Daily Usage Tracking Interface*
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 4. Analytics & Reports
+**Current State:** Deep dive into spending habits.
+- **Spending Trends:** Visual analysis of where money is going.
+- **Monthly Analysis:** Breakdown of expenses on a month-by-month basis.
+- **Export Options:** Capabilities to export data (likely to PDF or Excel) for offline viewing.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+![Analytics Page](screenshots/analytics.png)
+*Analytics and Trends Page*
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 5. AI Budget Planning (GenAI Integration) 🤖
+**Current State:** Advanced feature powered by **Google Gemini 2.0 Flash**.
+- **Functionality:** Users enter their financial profile (Income, Goal, Location, Habits).
+- **AI Engine:** The app sends this data to Gemini via `ChatGPTService.js`.
+- **Output:** Returns a personalized, structured budget plan including:
+  - Recommended fixed expenses vs. savings.
+  - Investment advice.
+  - Custom tips based on the user's city/location.
 
-## Learn More
+![Budget Planning Form](screenshots/budget-planning.png)
+*AI Budget Planning Interface*
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 6. Future Modules (Placeholders)
+These sections are present in the routing but currently marked as "Coming Soon":
+- **Personal Usage:** `[Coming Soon]`
+- **EMI Tracker:** `[Coming Soon]`
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🛠 Technical Stack
+- **Frontend:** React.js
+- **UI Framework:** Material UI (MUI)
+- **Styling:** Tailwind CSS + Custom CSS
+- **Charts:** Recharts
+- **PDF/Exports:** jsPDF, xlsx
+- **Icons:** MUI Icons, FontAwesome
+- **AI/LLM:** Google Gemini API (via `generativelanguage.googleapis.com`)
+- **Routing:** React Router DOM v6+
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 🏃‍♂️ How to Run
 
-### Making a Progressive Web App
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+2. **Start the Application:**
+   ```bash
+   npm start
+   ```
+   *Runs on `http://localhost:3000` (or 3001 if 3000 is busy).*
 
-### Advanced Configuration
+3. **Build for Production:**
+   ```bash
+   npm run build
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+*Documentation generated by Antigravity on 2026-01-24.*

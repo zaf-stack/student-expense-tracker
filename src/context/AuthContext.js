@@ -63,9 +63,9 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const signup = (email, password) => {
+    const signup = (name, email, password) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
-        const newUser = { email, password: hashedPassword };
+        const newUser = { name, email, password: hashedPassword };
 
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         localStorage.setItem('users', JSON.stringify([...users, newUser]));
@@ -84,8 +84,54 @@ export function AuthProvider({ children }) {
         navigate('/login');
     };
 
+    const updateProfile = (updatedData) => {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const updatedUser = { ...currentUser, ...updatedData };
+
+        // Update in users array
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const updatedUsers = users.map(u => u.email === currentUser.email ? { ...u, ...updatedData } : u);
+
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+    };
+
+    const changePassword = (currentPassword, newPassword) => {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const userIndex = users.findIndex(u => u.email === currentUser.email);
+
+        if (userIndex === -1) throw new Error('User not found');
+
+        const userRecord = users[userIndex];
+
+        if (!bcrypt.compareSync(currentPassword, userRecord.password)) {
+            throw new Error('Current password is incorrect');
+        }
+
+        const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
+        users[userIndex].password = hashedNewPassword;
+
+        localStorage.setItem('users', JSON.stringify(users));
+        // We don't store password in currentUser ideally, but if it is there update it or leave it. 
+        // Our signup does: {name, email, password: hash}. So currentUser has hash.
+        const updatedCurrentUser = { ...currentUser, password: hashedNewPassword };
+        localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
+        setUser(updatedCurrentUser);
+    };
+
+    const deleteAccount = () => {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const filteredUsers = users.filter(u => u.email !== currentUser.email);
+
+        localStorage.setItem('users', JSON.stringify(filteredUsers));
+        logout();
+    };
+
     return (
-        <AuthContext.Provider value={{ user, signup, login, logout }}>
+        <AuthContext.Provider value={{ user, signup, login, logout, updateProfile, changePassword, deleteAccount }}>
             {children}
         </AuthContext.Provider>
     );

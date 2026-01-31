@@ -1,49 +1,41 @@
 import React, { useState } from "react";
 import { Box, Typography, CircularProgress, Alert } from "@mui/material";
-import BudgetForm from "./BudgetForm";
+import BudgetWizard from "./BudgetWizard";
 import BudgetResult from "./BudgetResult";
 import { getBudgetAdvice } from "./ChatGPTService";
+import { useAuth } from "../../context/AuthContext";
 
 const BudgetPlanningPage = () => {
+    const { user } = useAuth();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [userData, setUserData] = useState(null); // ✅ Store complete user data
+    const [userData, setUserData] = useState(null);
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (wizardData) => {
         try {
             setLoading(true);
             setError("");
-            setUserData(data); // ✅ Store user data before fetching AI response
 
-            const advice = await getBudgetAdvice(data);
+            // Map Wizard data to the format expected by ChatGPTService and BudgetResult
+            const formattedData = {
+                ...wizardData, // Spread all fields (name, age, city, etc.)
+                // Ensure specific fields are correctly formatted if needed, though they match now
+                rentAmount: wizardData.rentAmount || 0,
+                loanEMI: wizardData.loanEMI || 0,
+                savingGoal: wizardData.savingGoal || 0,
+            };
+
+            setUserData(formattedData);
+
+            const advice = await getBudgetAdvice(formattedData);
             setResult({
                 advice,
-                name: data.name,
-                language: data.language,
-                chooselanguage: data.chooselanguage,
-                country: data.country,
-                state: data.state,
-                city: data.city,
-                userType: data.userType,
-                age: data.age,
-                gender: data.gender,
-                maritalStatus: data.maritalStatus,
-                living: data.living,
-                rentAmount: data.rentAmount || 0,
-                income: data.income,
-                savingGoal: data.savingGoal,
-                goalType: data.goalType,
-                financialGoal: data.goal,
-                hasDebt: data.hasDebt,
-                loanEMI: data.loanEMI || 0,
-                emergencyFund: data.emergencyFund,
-                spendingHabits: data.spendingHabits,
-                utilities: data.utilities,
-                transportation: data.transportation
+                ...formattedData
             });
         } catch (err) {
-            setError("Failed to fetch budget advice.");
+            console.error(err);
+            setError("Failed to fetch budget advice. Please ensure you have an active internet connection.");
         } finally {
             setLoading(false);
         }
@@ -51,14 +43,43 @@ const BudgetPlanningPage = () => {
 
     return (
         <div>
-            <Box sx={{ p: 1 }}>
-                <Typography variant="h4" textAlign="center" sx={{ mb: 2 }}>Personalized Budget Planning</Typography>
-                {error && <Alert severity="error">{error}</Alert>}
-                <BudgetForm onSubmit={onSubmit} />
-                {loading && <CircularProgress />}
+            <Box sx={{ p: 2 }}>
+                <Typography variant="h4" textAlign="center" sx={{ mb: 4, fontWeight: 'bold', color: '#334155' }}>
+                    🚀 Interactive Budget Planner
+                </Typography>
 
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+                {!result && !loading && (
+                    <BudgetWizard onSubmit={onSubmit} />
+                )}
+
+                {loading && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
+                        <CircularProgress size={60} thickness={4} />
+                        <Typography sx={{ mt: 2, color: 'text.secondary' }}>
+                            Creating your personalized financial plan...
+                        </Typography>
+                    </Box>
+                )}
             </Box>
-            {result && userData && <BudgetResult result={result} userData={userData} />}</div>
+
+            {result && userData && !loading && (
+                <Box sx={{ mt: 4 }}>
+                    <BudgetResult result={result} userData={userData} />
+                    <Box sx={{ textAlign: 'center', mt: 3 }}>
+                        <Typography
+                            variant="button"
+                            color="primary"
+                            sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => setResult(null)}
+                        >
+                            Start Over
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
+        </div>
     );
 };
 

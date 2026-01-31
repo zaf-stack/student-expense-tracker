@@ -12,6 +12,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import BudgetPlanningPage from './components/BudgetPlanning/BudgetPlanningPage';
+import ProfilePage from './pages/ProfilePage';
+import PhonePeImport from './pages/PhonePeImport';
 // import EditorTrackerPage from './components/EditorTracker/EditorTrackerPage';
 
 // Extra Pages
@@ -44,6 +46,8 @@ function App() {
                 <Route path="/daily-usage" element={<DailyUsagePage />} />
                 {/* <Route path="/editor-tracker" element={<EditorTrackerPage />} /> */}
                 <Route path="/budget-planning" element={<BudgetPlanningPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/phonepe-import" element={<PhonePeImport />} />
                 <Route path="/personal-usage" element={<PersonalUsage />} />
                 <Route path="/emi-tracker" element={<EMITracker />} />
               </Route>

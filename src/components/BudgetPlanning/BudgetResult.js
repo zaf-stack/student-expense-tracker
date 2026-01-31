@@ -118,11 +118,11 @@ const BudgetResult = ({ result, userData }) => {
                         <Typography className="text-lg text-gray-700">
                             <span className="font-semibold">📝 Name:</span> {userData.name}
                             <br />
-                            <span className="font-semibold">🌍 Location:</span> {userData.city}, {userData.state}, {userData.country}
+                            <span className="font-semibold">🌍 Location:</span> {[userData.city, userData.state, userData.country].filter(Boolean).join(", ") || "Global"}
                             <br />
-                            <span className="font-semibold">💰 Income:</span> ₹{userData.income}
+                            <span className="font-semibold">💰 Income:</span> ₹{Number(userData.income).toLocaleString('en-IN')}
                             <br />
-                            <span className="font-semibold">💾 Saving Goal:</span> ₹{userData.savingGoal}
+                            <span className="font-semibold">💾 Saving Goal:</span> ₹{Number(userData.savingGoal).toLocaleString('en-IN')}
                             <br />
                             <span className="font-semibold">🎯 Goal:</span> {userData.goal}
                             <br /><br />
