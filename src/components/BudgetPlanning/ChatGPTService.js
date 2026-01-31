@@ -4,8 +4,8 @@
 // const apiKey = "sk-00634dd599c044db8e75ba23d1221f6c"
 
 const apiUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-const apiKey = "AIzaSyAoNWGLPFY_Aeml-lWuFElNmfs6PHBjXYg"; // ✅ Google Gemini API Key
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent";
+const apiKey = "AIzaSyC4mguRjmzyCQp9h1JAOQYfXJhcMI6l0vQ"; // ✅ Google Gemini API Key (Updated)
 
 export const getBudgetAdvice = async (userData) => {
     try {
@@ -29,45 +29,43 @@ export const getBudgetAdvice = async (userData) => {
                             {
                                 text: ` 
                                 
-                                Act as a financial advisor. Follow these rules strictly:
+                                Act as a top-class financial advisor. Follow these rules strictly:
 1. Response language: ${userData.language}.
 2. Consider living costs in ${userData.city}, ${userData.state}, ${userData.country}.
 3. Structure the advice clearly with headings and bullet points.
-4. End with a motivational note to use 'Student Expense Tracker'.
+4. Provide a "Top Class" implementation plan including Risk Management, Investments, and specific Savings Strategies.
 
                                 
-                                **User Information:**
+                                **User Profile:**
                                 - Name: ${userData.name}
-                                - Age: ${userData.age}, Gender: ${userData.gender}, Marital Status: ${userData.maritalStatus}
+                                - Role: ${userData.userType}
+                                - Demographics: ${userData.age} yrs, ${userData.gender}, ${userData.maritalStatus}
                                 - Location: ${userData.city}, ${userData.state}, ${userData.country}
-                                - Preferred Language: ${userData.language} (Respond in this language)
-                                - User Type: ${userData.userType}
                                 
-                                **Financial Information:**
+                                **Financial Snapshot:**
                                 - Monthly Income: ₹${userData.income}
-                                - Monthly Saving Goal: ₹${userData.savingGoal} (${userData.goalType})
-                                - Financial Goal: ${userData.goal}
-                                - Living Situation: ${userData.living} ${userData.living === "rent" ? `(Rent: ₹${userData.rentAmount})` : ""}
-                                - Has Debt/Loan: ${userData.hasDebt} ${userData.hasDebt === "yes" ? `(EMI: ₹${userData.loanEMI})` : ""}
-                                - Emergency Fund: ₹${userData.emergencyFund}
-                                - Water/Electricity/Mobile-bill : ₹${userData.utilities}
-                                - Transportation : ₹${userData.transportation}
+                                - Living: ${userData.living} ${userData.rentAmount ? `(Cost: ₹${userData.rentAmount})` : ""}
+                                - Fixed Costs: Utilities: ₹${userData.utilities}, Transport: ₹${userData.transportation}
+                                - Liabilities: Debt: ${userData.hasDebt} ${userData.loanEMI ? `(EMI: ₹${userData.loanEMI})` : ""}
+                                - Safety Net: Emergency Fund: ₹${userData.emergencyFund}
+                                - Habits: ${userData.spendingHabits}
                                 
-                                **Spending & Saving Habits:**
-                                - Spending Habits: ${userData.spendingHabits}
+                                **Goals:**
+                                - Target: Save ₹${userData.savingGoal} (${userData.goalType})
+                                - Main Goal: ${userData.goal}
                                 
                                 **Instructions:**
-                                Generate a well-structured budget plan considering all the above details. Ensure that the response is in **${userData.language}**, as requested by the user. Also, take into account the **cost of living and inflation rate** in ${userData.city}, ${userData.state}, ${userData.country} while suggesting a budget plan.
+                                Generate a comprehensive financial plan.
                                 
-                                The output should be mobile-friendly and formatted with sections like:
-                                1️⃣ **Summary** (Quick details about the user)
-                                2️⃣ **Fixed Expenses** (Suggested allocations for rent, utilities, groceries, etc.) based on the cost of living in ${userData.city}, ${userData.state}
-                                3️⃣ **Savings Plan** (How much to save monthly and best saving methods)
-                                4️⃣ **Investment Suggestions** (If applicable, based on user preferences)
-                                5️⃣ **Debt Management** (If the user has loans, provide a realistic repayment strategy)
-                                6️⃣ **Custom Tips & Warnings** (Provide tailored financial advice for better money management considering the economic conditions of ${userData.city}, ${userData.state})
+                                The output MUST include these sections:
+                                1️⃣ **Executive Summary** (Quick health check)
+                                2️⃣ **Budget Allocation (50/30/20 Rule)** (Exact numbers for Needs, Wants, Savings based on income)
+                                3️⃣ **Risk Management Plan** (Emergency fund advice, Insurance suggestions based on profile)
+                                4️⃣ **Investment Strategy** (Where to invest savings: Stocks, FDs, Mutual Funds, Gold? - give safe & risky options)
+                                5️⃣ **Debt Repayment Strategy** (If debt exists, how to clear it fast)
+                                6️⃣ **Action Plan for Goal** (Step-by-step guide to achieve "${userData.goal}")
                                 
-                                Keep the structure clean and easy to read on mobile devices. Use bullet points, spacing, and bold text for key information.`,
+                                Keep it professional yet motivating.`,
                             },
                         ],
                     },

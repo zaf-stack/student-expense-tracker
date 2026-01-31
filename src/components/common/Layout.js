@@ -15,7 +15,8 @@ import {
     useTheme,
     BottomNavigation,
     BottomNavigationAction,
-    Paper
+    Paper,
+    Avatar // ✅ Import Avatar
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -29,7 +30,8 @@ import {
     MoreHoriz,
     Analytics,
     Home,
-    AccountCircle
+    AccountCircle,
+    ReceiptLong
 } from '@mui/icons-material';
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,6 +43,7 @@ const menuItems = [
     { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
     { text: 'Daily Usage', icon: <DailyIcon />, path: '/daily-usage' },
     { text: 'Budget Planning', icon: <AccountBalanceWallet />, path: '/budget-planning' },
+    { text: 'PhonePe Import', icon: <ReceiptLong />, path: '/phonepe-import' },
     { text: 'Personal Usage', icon: <PersonalIcon />, path: '/personal-usage' },
     { text: 'EMI Tracker', icon: <EMIIcon />, path: '/emi-tracker' },
 ];
@@ -82,10 +85,24 @@ export default function Layout({ children }) {
         if (currentIndex > -1) setMobileNavValue(currentIndex);
     }, [location]);
 
+    // ✅ Reset sidebar state when screen size changes
+    useEffect(() => {
+        if (!isMobile) {
+            setIsSidebarOpen(true); // Always open on desktop
+        } else {
+            setIsSidebarOpen(false); // Closed by default on mobile
+        }
+    }, [isMobile]);
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {/* Desktop App Bar */}
-            <AppBar position="sticky" sx={{ display: { xs: 'none', md: 'block' }, zIndex: 1200 }}>
+            <AppBar position="sticky" sx={{
+                display: { xs: 'none', md: 'block' },
+                zIndex: 1200,
+                background: 'linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%)',
+                boxShadow: '0 4px 20px 0 rgba(37, 99, 235, 0.2)'
+            }}>
                 <Toolbar>
                     <IconButton
                         color="inherit"
@@ -99,9 +116,36 @@ export default function Layout({ children }) {
                         Student Expense Manager
                     </Typography>
                     {user && (
-                        <Button color="inherit" onClick={logout}>
-                            Logout ({user.email})
-                        </Button>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box
+                                component={Link}
+                                to="/profile"
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    textDecoration: 'none',
+                                    color: 'inherit',
+                                    cursor: 'pointer',
+                                    '&:hover': { opacity: 0.8 }
+                                }}
+                            >
+                                <Avatar
+                                    src={user.photo}
+                                    alt={user.name}
+                                    sx={{ width: 32, height: 32, mr: 1, border: '2px solid white' }}
+                                />
+                                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                    {user.name || user.email}
+                                </Typography>
+                            </Box>
+                            <Button
+                                color="inherit"
+                                onClick={logout}
+                                sx={{ textTransform: 'none', opacity: 0.9, border: '1px solid rgba(255,255,255,0.3)', borderRadius: '20px', px: 2 }}
+                            >
+                                Logout
+                            </Button>
+                        </Box>
                     )}
                 </Toolbar>
             </AppBar>
@@ -112,16 +156,26 @@ export default function Layout({ children }) {
                 zIndex: 1200,
                 width: '100%', // Ensure it takes full width
                 maxWidth: '100%', // Prevent overflow
-                overflowX: 'hidden' // Hide horizontal overflow
+                overflowX: 'hidden', // Hide horizontal overflow
+                background: 'linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%)'
             }}>
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         {mobileItems[mobileNavValue].text}
                     </Typography>
                     {user && (
-                        <IconButton color="inherit" onClick={logout}>
-                            Logout ({user.email})
-                        </IconButton>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton color="inherit" component={Link} to="/profile" size="small">
+                                <Avatar
+                                    src={user.photo}
+                                    alt={user.name}
+                                    sx={{ width: 32, height: 32, border: '2px solid white' }}
+                                />
+                            </IconButton>
+                            <IconButton color="inherit" onClick={logout}>
+                                <Typography variant="caption" sx={{ fontWeight: 600 }}>Logout</Typography>
+                            </IconButton>
+                        </Box>
                     )}
                 </Toolbar>
             </AppBar>
@@ -187,11 +241,11 @@ export default function Layout({ children }) {
                                 height: '100%',
                                 width: '70%',
                                 zIndex: 1300,
-                                backgroundColor: theme.palette.background.paper,
+                                backgroundColor: theme.palette.background.paper, // ✅ Ensure solid background
                                 boxShadow: theme.shadows[16]
                             }}
                         >
-                            <Box sx={{ pt: 8, px: 2 }}>
+                            <Box sx={{ pt: 8, px: 2, bgcolor: theme.palette.background.paper, height: '100%' }}> {/* ✅ Solid background for list container */}
                                 <List>
                                     {menuItems.map((item) => (
                                         <ListItem

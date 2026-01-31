@@ -4,15 +4,9 @@ import MaterialTable from '@material-table/core';
 import { DeleteOutline, Edit } from '@mui/icons-material';
 import { ExportCsv, ExportPdf } from '@material-table/exporters';
 import EditExpenseModal from './EditExpenseModal';
-import { TextField, InputAdornment } from '@mui/material';
+import { TextField, InputAdornment, Typography, Box } from '@mui/material';
 
-const categories = {
-    grocery: 'Grocery',
-    vegetables: 'Vegetables',
-    fruits: 'Fruits',
-    snacks: 'Snacks',
-    outside_food: 'Outside Food'
-};
+
 
 export default function ExpenseList({ expenses, onDelete, onEdit }) {
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -26,12 +20,20 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
             type: 'date',
             filtering: true,
             headerStyle: { fontWeight: 'bold' },
+            render: rowData => {
+                const date = new Date(rowData.date);
+                return isNaN(date.getTime()) ? rowData.date : date.toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            },
             customFilterAndSearch: (filter, rowData) => {
                 if (!filter) return true;
                 const rowDate = new Date(rowData.date);
-                const filterDate = new Date(filter);
+                if (isNaN(rowDate.getTime())) return false; // Safe check
 
-                // Exact Date Match
+                const filterDate = new Date(filter);
                 return rowDate.toISOString().split('T')[0] === filter;
             },
             filterComponent: ({ onFilterChanged, columnDef }) => (
@@ -46,22 +48,38 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
         {
             title: 'Category',
             field: 'category',
-            lookup: categories,
+            lookup: expenses.reduce((acc, curr) => {
+                const cat = curr.category || 'Other';
+                acc[cat] = cat;
+                return acc;
+            }, {}),
             filterPlaceholder: 'All Categories'
         },
         {
             title: 'Description',
             field: 'description',
             cellStyle: { whiteSpace: 'nowrap' },
-            // Global Search Fix
             customFilterAndSearch: (filter, rowData) =>
-                rowData.description.toLowerCase().includes(filter.toLowerCase())
+                (rowData.description || '').toLowerCase().includes(filter.toLowerCase())
         },
         {
             title: 'Amount (₹)',
             field: 'amount',
             type: 'numeric',
-            render: rowData => `₹${rowData.amount.toFixed(2)}`,
+            render: rowData => {
+                const isCredit = rowData.type === 'CREDIT' || rowData.category === 'Income';
+                const isDebit = rowData.type === 'DEBIT' || (rowData.amount < 0 && !isCredit);
+                // If source is phonepe, trust type. Else assume expense unless specified.
+
+                const color = isCredit ? 'green' : (isDebit ? 'red' : 'inherit');
+                const sign = isCredit ? '+' : (isDebit ? '-' : '');
+
+                return (
+                    <Box component="span" sx={{ color, fontWeight: 'bold' }}>
+                        {sign}₹{Math.abs(rowData.amount).toFixed(2)}
+                    </Box>
+                );
+            },
             align: 'right',
             headerStyle: { textAlign: 'right' },
             customFilterAndSearch: (filter, rowData) => {
@@ -72,11 +90,11 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                 if (filter.includes('-')) {
                     const [min, max] = filter.split('-').map(Number);
                     if (isNaN(min) || isNaN(max)) return true;
-                    return rowData.amount >= min && rowData.amount <= max;
+                    return Math.abs(rowData.amount) >= min && Math.abs(rowData.amount) <= max;
                 }
 
                 // Handle Exact Amount (100)
-                return rowData.amount === Number(filter);
+                return Math.abs(rowData.amount) === Number(filter);
             },
             filterComponent: ({ onFilterChanged, columnDef }) => (
                 <TextField
@@ -101,7 +119,11 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
         {
             icon: () => <DeleteOutline color="error" />,
             tooltip: 'Delete Expense',
-            onClick: (event, rowData) => onDelete(rowData.id)
+            onClick: (event, rowData) => {
+                if (window.confirm("Are you sure you want to delete this expense?")) {
+                    onDelete(rowData.id);
+                }
+            }
         }
     ];
 
@@ -112,6 +134,7 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
     };
 
     const handleEditSave = (updatedExpense) => {
+        if (!window.confirm("Save changes to this expense?")) return;
         onEdit(updatedExpense);
         setEditModalOpen(false);
     };
@@ -128,9 +151,7 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                     filtering: true,
                     sorting: true,
                     pageSize: 10,
-                    pageSizeOptions: [5, 10, 20],
-                    // searchFieldAlignment: 'left',
-                    // searchAutoFocus: true,
+                    pageSizeOptions: [5, 10, 20, 50, 100], // Added larger options
                     exportMenu: [
                         {
                             label: 'Export PDF',
@@ -150,9 +171,23 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                     cellStyle: {
                         fontSize: '0.875rem' // Smaller font on mobile
                     },
-                    maxBodyHeight: '400px', // Mobile friendly scroll
+                    maxBodyHeight: '600px', // Increased height
                     minBodyHeight: '200px',
-                    responsive: true // Enable responsive table
+                    responsive: true,
+                    // Ensure export all data
+                    exportAllData: true,
+                    // Show total row
+                    showTitle: true,
+                }}
+                components={{
+                    Toolbar: props => (
+                        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h6">Daily Expenses</Typography>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                                Total: ₹{expenses.reduce((sum, item) => sum + Math.abs(item.amount), 0).toLocaleString()}
+                            </Typography>
+                        </Box>
+                    )
                 }}
             />
 
