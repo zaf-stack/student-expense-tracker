@@ -3,10 +3,8 @@ import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 import BudgetWizard from "./BudgetWizard";
 import BudgetResult from "./BudgetResult";
 import { getBudgetAdvice } from "./ChatGPTService";
-import { useAuth } from "../../context/AuthContext";
 
 const BudgetPlanningPage = () => {
-    const { user } = useAuth();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");

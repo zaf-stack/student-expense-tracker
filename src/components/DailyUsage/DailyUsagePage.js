@@ -8,7 +8,6 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import EditIcon from '@mui/icons-material/Edit';
-import CategoryIcon from '@mui/icons-material/Category';
 import { DeleteOutline, Money } from '@mui/icons-material';
 
 const STORAGE_KEY = 'dailyExpenses';
@@ -16,7 +15,6 @@ const STORAGE_KEY = 'dailyExpenses';
 export default function DailyUsagePage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const [expenses, setExpenses] = useState(() => {
         const savedExpenses = localStorage.getItem(STORAGE_KEY);

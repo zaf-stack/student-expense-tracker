@@ -1,10 +1,11 @@
 // src/components/DailyUsage/ExpenseList.js
 import React, { useState } from 'react';
-import MaterialTable from '@material-table/core';
+import MaterialTable, { MTableToolbar } from '@material-table/core';
 import { DeleteOutline, Edit } from '@mui/icons-material';
 import { ExportCsv, ExportPdf } from '@material-table/exporters';
 import EditExpenseModal from './EditExpenseModal';
-import { TextField, InputAdornment, Typography, Box } from '@mui/material';
+import { TextField, InputAdornment, Box, Chip } from '@mui/material';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 
 
 
@@ -33,7 +34,6 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                 const rowDate = new Date(rowData.date);
                 if (isNaN(rowDate.getTime())) return false; // Safe check
 
-                const filterDate = new Date(filter);
                 return rowDate.toISOString().split('T')[0] === filter;
             },
             filterComponent: ({ onFilterChanged, columnDef }) => (
@@ -105,7 +105,15 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                     }}
                     fullWidth
                 />
-            )
+            ),
+            renderSummaryRow: (data) => {
+                const total = data.reduce((sum, row) => sum + Math.abs(row.amount), 0);
+                return (
+                    <Box sx={{ fontWeight: 'bold', color: 'primary.main', fontSize: '1rem', textAlign: 'right' }}>
+                        Total: ₹{total.toLocaleString()}
+                    </Box>
+                );
+            }
         }
     ];
 
@@ -151,7 +159,7 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                     filtering: true,
                     sorting: true,
                     pageSize: 10,
-                    pageSizeOptions: [5, 10, 20, 50, 100], // Added larger options
+                    pageSizeOptions: [5, 10, 20, 50, 100],
                     exportMenu: [
                         {
                             label: 'Export PDF',
@@ -166,28 +174,36 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                     headerStyle: {
                         backgroundColor: '#1976d2',
                         color: 'white',
-                        fontSize: '0.875rem' // Smaller font on mobile
+                        fontSize: '0.875rem'
                     },
                     cellStyle: {
-                        fontSize: '0.875rem' // Smaller font on mobile
+                        fontSize: '0.875rem'
                     },
-                    maxBodyHeight: '600px', // Increased height
                     minBodyHeight: '200px',
                     responsive: true,
-                    // Ensure export all data
                     exportAllData: true,
-                    // Show total row
                     showTitle: true,
                 }}
                 components={{
-                    Toolbar: props => (
-                        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="h6">Daily Expenses</Typography>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                                Total: ₹{expenses.reduce((sum, item) => sum + Math.abs(item.amount), 0).toLocaleString()}
-                            </Typography>
-                        </Box>
-                    )
+                    Toolbar: props => {
+                        const displayData = props.dataManager?.searchedData || props.data || [];
+                        const total = displayData.reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
+                        return (
+                            <Box>
+                                <MTableToolbar {...props} />
+                                <Box sx={{ p: 1, px: 2, display: 'flex', justifyContent: 'flex-end', bgcolor: '#f5f5f5', borderTop: '1px solid #e0e0e0' }}>
+                                    <Chip
+                                        icon={<TrendingDownIcon />}
+                                        label={`Total: ₹${total.toLocaleString()}`}
+                                        color="primary"
+                                        variant="filled"
+                                        sx={{ fontWeight: 'bold', fontSize: '1rem' }}
+                                    />
+                                </Box>
+                            </Box>
+                        );
+                    }
                 }}
             />
 

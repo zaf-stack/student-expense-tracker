@@ -1,8 +1,8 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import { categorizePhonePe } from './phonepeCategoryRules';
 
-// Configure worker to use the local file in public folder
-GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Set worker to CDN to avoid webpack/local file issues with version 4.x
+GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${"4.10.38"}/build/pdf.worker.min.mjs`;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_PATTERN = MONTHS.join('|');
@@ -39,10 +39,11 @@ const extractAmount = (text) => {
     return null;
 };
 
-export const extractTextFromPdf = async (file) => {
+export const extractTextFromPdf = async (input) => {
     try {
-        const arrayBuffer = await file.arrayBuffer();
-        // Use the worker we configured
+        const arrayBuffer = input instanceof ArrayBuffer ? input : await input.arrayBuffer();
+
+        // Use CDN worker, do not disable worker
         const pdf = await getDocument({ data: arrayBuffer }).promise;
 
         let fullText = '';

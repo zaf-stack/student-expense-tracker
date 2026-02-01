@@ -1,9 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { Button, Box, Typography, Card, CardContent } from "@mui/material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "tailwindcss/tailwind.css";
-import { useReactToPrint } from "react-to-print";
 
 const BudgetResult = ({ result, userData }) => {
     // const componentRef = useRef();
@@ -45,7 +44,6 @@ const BudgetResult = ({ result, userData }) => {
 
         // Custom styling
         const titleFontSize = 18;
-        const headerFontSize = 14;
         const bodyFontSize = 12;
         const margin = 15;
         let yPos = margin;
@@ -80,8 +78,6 @@ const BudgetResult = ({ result, userData }) => {
             .replace(/👉/g, '• '); // 👉 को bullets में बदलें
 
         // Sections को अलग करें और tables में डालें
-        const sections = cleanAdvice.split(/\n\s*\n/);
-
         autoTable(doc, {
             startY: yPos,
             head: [['Budget Breakdown']],
