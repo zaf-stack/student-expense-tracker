@@ -19,7 +19,6 @@ import {
     Avatar // ✅ Import Avatar
 } from '@mui/material';
 import {
-    Dashboard as DashboardIcon,
     ShoppingCart as DailyIcon,
     Person as PersonalIcon,
     AccountBalance as EMIIcon,
@@ -30,7 +29,6 @@ import {
     MoreHoriz,
     Analytics,
     Home,
-    AccountCircle,
     ReceiptLong
 } from '@mui/icons-material';
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';

@@ -4,7 +4,7 @@ import MaterialTable, { MTableToolbar } from '@material-table/core';
 import { DeleteOutline, Edit } from '@mui/icons-material';
 import { ExportCsv, ExportPdf } from '@material-table/exporters';
 import EditExpenseModal from './EditExpenseModal';
-import { TextField, InputAdornment, Typography, Box, Paper, Chip } from '@mui/material';
+import { TextField, InputAdornment, Box, Chip } from '@mui/material';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 
 
@@ -34,7 +34,6 @@ export default function ExpenseList({ expenses, onDelete, onEdit }) {
                 const rowDate = new Date(rowData.date);
                 if (isNaN(rowDate.getTime())) return false; // Safe check
 
-                const filterDate = new Date(filter);
                 return rowDate.toISOString().split('T')[0] === filter;
             },
             filterComponent: ({ onFilterChanged, columnDef }) => (

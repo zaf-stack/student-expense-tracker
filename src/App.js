@@ -79,7 +79,6 @@ function App() {
 /* ✅ PublicRoute: No Sidebar for Login & Signup */
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
-  const location = useLocation();
 
   if (user) {
     // ✅ Redirect to home or saved path

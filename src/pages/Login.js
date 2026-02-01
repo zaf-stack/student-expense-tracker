@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button, TextField, Typography, Container, Box, IconButton, InputAdornment } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +9,6 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 export default function Login() {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const { login } = useAuth();
-    const navigate = useNavigate();
     const [showPassword, setShowPassword] = React.useState(false);
     const [loginError, setLoginError] = React.useState(''); // ✅ New state for error
 

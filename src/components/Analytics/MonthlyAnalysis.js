@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Typography, Box } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function MonthlyAnalysis({ expenses }) {
