@@ -1,4 +1,4 @@
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || "AIzaSyAoNWGLPFY_Aeml-lWuFElNmfs6PHBjXYg";
+const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || "AIzaSyABEcs1MZL7CGIObuBFANof3nukiyS8MVM";
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const DEFAULT_MODEL = process.env.REACT_APP_GEMINI_MODEL || "gemini-2.5-flash";
 const FALLBACK_MODELS = [
@@ -10,6 +10,7 @@ const FALLBACK_MODELS = [
 ];
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+let aiDisabled = false;
 
 let cachedModel = null;
 
@@ -97,6 +98,7 @@ const runGeminiWithFallback = async (payload) => {
  * @returns {Promise<Array<{id: string, category: string, merchant: string}>>}
  */
 export const categorizeTransactionsBatch = async (transactions) => {
+    if (aiDisabled) return [];
     if (!transactions || transactions.length === 0) return [];
 
     const simplifiedList = transactions.map(tx => ({
@@ -153,6 +155,19 @@ export const categorizeTransactionsBatch = async (transactions) => {
                 generationConfig: { responseMimeType: "application/json" }
             });
 
+            if (response.status === 401 || response.status === 403) {
+                let errorMessage = response.statusText;
+                try {
+                    const data = await response.json();
+                    errorMessage = data?.error?.message || errorMessage;
+                } catch (e) {
+                    // ignore JSON parsing errors
+                }
+                const err = new Error(`Gemini API access denied: ${errorMessage}`);
+                err.nonRetryable = true;
+                throw err;
+            }
+
             if (response.status === 429) {
                 console.warn(`Rate limit hit. Retrying in ${waitTime / 1000}s...`);
                 await delay(waitTime);
@@ -174,6 +189,10 @@ export const categorizeTransactionsBatch = async (transactions) => {
             return JSON.parse(textResponse);
 
         } catch (error) {
+            if (error.nonRetryable) {
+                aiDisabled = true;
+                throw error;
+            }
             console.error("AI Analysis Failed (Attempt " + (4 - retries) + "):", error);
             if (retries === 1) return []; // Return empty on final fail
             await delay(waitTime);

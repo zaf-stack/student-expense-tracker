@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -20,7 +20,11 @@ import {
     useMediaQuery,
     useTheme,
     Tabs,
-    Tab
+    Tab,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -31,34 +35,95 @@ import CategorySummary from '../components/DailyUsage/CategorySummary';
 import { categorizeTransactionsBatch } from '../services/geminiService';
 import ImportDashboard from '../components/PhonePe/ImportDashboard';
 
-const STORAGE_KEY = 'phonepeExpenses';
+const LEGACY_KEY = 'phonepeExpenses';
+const SESSIONS_KEY = 'phonepeImportSessions';
 
-// Enhanced Hash to prevent duplicates (Date + Amount + Type + Specific Time if avail)
-const buildHash = (tx) => `${tx.date}|${tx.amount}|${tx.type}|${tx.time || ''}|${tx.description}`;
+const hashArrayBuffer = async (buffer) => {
+    if (!window?.crypto?.subtle) return null;
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+};
+
+const formatSessionLabel = (session) => {
+    if (session?.statementRange?.start && session?.statementRange?.end) {
+        return `${session.statementRange.start} - ${session.statementRange.end}`;
+    }
+    return session?.fileName || 'Imported Statement';
+};
 
 export default function PhonePeImport() {
     const [parsing, setParsing] = useState(false);
     const [analyzing, setAnalyzing] = useState(false); // AI State
     const [error, setError] = useState('');
+    const [aiError, setAiError] = useState('');
     const [fileName, setFileName] = useState('');
     const [statementRange, setStatementRange] = useState(null);
     const [previewRows, setPreviewRows] = useState([]);
-    const [importedRows, setImportedRows] = useState(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        // Ensure parsing works for saved data
-        try {
-            return saved ? JSON.parse(saved) : [];
-        } catch (e) {
-            return [];
+    const [pendingImportMeta, setPendingImportMeta] = useState(null);
+    const [importSessions, setImportSessions] = useState(() => {
+        const saved = localStorage.getItem(SESSIONS_KEY);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                return [];
+            }
         }
+
+        const legacy = localStorage.getItem(LEGACY_KEY);
+        if (legacy) {
+            try {
+                const legacyRows = JSON.parse(legacy);
+                if (Array.isArray(legacyRows) && legacyRows.length > 0) {
+                    const session = {
+                        id: `import-${Date.now()}-legacy`,
+                        fileName: 'Legacy Import',
+                        fileHash: null,
+                        rangeKey: null,
+                        statementRange: null,
+                        createdAt: new Date().toISOString(),
+                        transactions: legacyRows
+                    };
+                    localStorage.setItem(SESSIONS_KEY, JSON.stringify([session]));
+                    return [session];
+                }
+            } catch (e) {
+                // ignore legacy parse errors
+            }
+        }
+
+        return [];
     });
+    const [activeSessionId, setActiveSessionId] = useState('');
     const [importStats, setImportStats] = useState(null);
     const [tabValue, setTabValue] = useState(0);
     const fileInputRef = useRef(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const existingHashes = useMemo(() => new Set(importedRows.map(buildHash)), [importedRows]);
+    useEffect(() => {
+        if (importSessions.length > 0 && !activeSessionId) {
+            setActiveSessionId(importSessions[0].id);
+        }
+    }, [importSessions, activeSessionId]);
+
+    useEffect(() => {
+        setTabValue(0);
+    }, [activeSessionId]);
+
+    const activeSession = useMemo(
+        () => importSessions.find((session) => session.id === activeSessionId),
+        [importSessions, activeSessionId]
+    );
+    const activeTransactions = activeSession?.transactions || [];
+    const displayRange = activeSession?.statementRange || statementRange;
+
+    const persistSessions = (nextSessions) => {
+        setImportSessions(nextSessions);
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify(nextSessions));
+    };
 
     const handleFileUpload = async (event) => {
         const file = event.target.files?.[0];
@@ -67,12 +132,33 @@ export default function PhonePeImport() {
         setAnalyzing(false);
         setError('');
         setImportStats(null);
+        setAiError('');
         setFileName(file.name);
+        setPendingImportMeta(null);
 
         try {
-            // 1. Parse PDF
-            const text = await extractTextFromPdf(file);
-            setStatementRange(extractStatementRange(text));
+            const buffer = await file.arrayBuffer();
+            const fileHash = await hashArrayBuffer(buffer);
+
+            if (fileHash && importSessions.some((session) => session.fileHash === fileHash)) {
+                setError('This statement file is already imported.');
+                setParsing(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+
+            const text = await extractTextFromPdf(buffer);
+            const range = extractStatementRange(text);
+            const rangeKey = range ? `${range.start} - ${range.end}` : null;
+
+            if (rangeKey && importSessions.some((session) => session.rangeKey === rangeKey)) {
+                setError('A statement with the same date range is already imported.');
+                setParsing(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+
+            setStatementRange(range);
             const transactions = parsePhonePeText(text);
 
             if (transactions.length === 0) {
@@ -84,6 +170,13 @@ export default function PhonePeImport() {
             // Assign temp IDs for AI matching
             transactions.forEach((t, i) => t.tempId = `temp-${i}`);
             setPreviewRows(transactions);
+            setPendingImportMeta({
+                fileName: file.name,
+                fileHash,
+                statementRange: range,
+                rangeKey,
+                createdAt: new Date().toISOString()
+            });
             setParsing(false);
 
             // 2. Trigger AI Analysis
@@ -98,6 +191,7 @@ export default function PhonePeImport() {
 
     const runAiAnalysis = async (transactions) => {
         setAnalyzing(true);
+        setAiError('');
         try {
             // Increased batch size to 50 since 1.5 Flash has adequate context window.
             // Fewer requests = Less chance of 429 Rate Limits.
@@ -129,7 +223,8 @@ export default function PhonePeImport() {
                 setPreviewRows([...updatedTransactions]);
             }
         } catch (err) {
-            console.error("AI Analysis partial failure", err);
+            console.error("AI Analysis failure", err);
+            setAiError(err.message || 'AI analysis failed. Using rule-based categories instead.');
         } finally {
             setAnalyzing(false);
         }
@@ -143,57 +238,82 @@ export default function PhonePeImport() {
         setStatementRange(null);
         setPreviewRows([]);
         setImportStats(null);
+        setAiError('');
+        setPendingImportMeta(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleImport = () => {
         if (!previewRows.length) return;
-        const merged = [...importedRows];
-        let duplicates = 0;
-        let added = 0;
+        const sessionId = `import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const statementRangeValue = pendingImportMeta?.statementRange || statementRange;
+        const rangeKeyValue = pendingImportMeta?.rangeKey || (statementRangeValue ? `${statementRangeValue.start} - ${statementRangeValue.end}` : null);
 
-        previewRows.forEach((row) => {
-            const hash = buildHash(row);
-            if (existingHashes.has(hash)) {
-                duplicates += 1;
-                return;
-            }
-            merged.push({
-                ...row,
-                id: Date.now() + Math.random(),
-                createdAt: new Date().toISOString(),
-                source: 'phonepe',
-                category: row.type === 'CREDIT' ? 'Income' : (row.category || 'Other'),
-                description: row.merchant ? `${row.merchant} (${row.description})` : row.description
-            });
-            existingHashes.add(hash);
-            added += 1;
-        });
+        const normalizedRows = previewRows.map((row) => ({
+            ...row,
+            id: row.id || `${Date.now()}-${Math.random()}`,
+            createdAt: row.createdAt || new Date().toISOString(),
+            source: 'phonepe',
+            category: row.type === 'CREDIT' ? 'Income' : (row.category || 'Other'),
+            description: row.merchant ? `${row.merchant} (${row.description})` : row.description
+        }));
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-        setImportedRows(merged);
-        setImportStats({ added, duplicates });
-        setPreviewRows([]); // Clear preview after import
-        setFileName(''); // Reset file selection
+        const newSession = {
+            id: sessionId,
+            fileName: pendingImportMeta?.fileName || fileName || 'PhonePe Statement',
+            fileHash: pendingImportMeta?.fileHash || null,
+            rangeKey: rangeKeyValue,
+            statementRange: statementRangeValue,
+            createdAt: pendingImportMeta?.createdAt || new Date().toISOString(),
+            transactions: normalizedRows
+        };
+
+        const nextSessions = [newSession, ...importSessions];
+        persistSessions(nextSessions);
+        setActiveSessionId(sessionId);
+        setImportStats({ added: normalizedRows.length, duplicates: 0 });
+        setPreviewRows([]);
+        setFileName('');
+        setPendingImportMeta(null);
     };
 
     const handleDeleteImported = (id) => {
-        const updated = importedRows.filter(row => row.id !== id);
-        setImportedRows(updated);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        const updatedSessions = importSessions.map((session) => {
+            if (session.id !== activeSessionId) return session;
+            return {
+                ...session,
+                transactions: session.transactions.filter((row) => row.id !== id)
+            };
+        });
+        persistSessions(updatedSessions);
     };
 
     const handleDeleteAll = () => {
         if (window.confirm('Are you sure you want to delete ALL imported transactions? This cannot be undone.')) {
-            setImportedRows([]);
-            localStorage.removeItem(STORAGE_KEY);
+            setImportSessions([]);
+            setActiveSessionId('');
+            localStorage.removeItem(SESSIONS_KEY);
+            localStorage.removeItem(LEGACY_KEY);
         }
     };
 
     const handleEditImported = (updatedRow) => {
-        const updated = importedRows.map(row => row.id === updatedRow.id ? updatedRow : row);
-        setImportedRows(updated);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        const updatedSessions = importSessions.map((session) => {
+            if (session.id !== activeSessionId) return session;
+            return {
+                ...session,
+                transactions: session.transactions.map((row) => row.id === updatedRow.id ? updatedRow : row)
+            };
+        });
+        persistSessions(updatedSessions);
+    };
+
+    const handleDeleteSession = () => {
+        if (!activeSessionId) return;
+        if (!window.confirm('Delete this statement import? This cannot be undone.')) return;
+        const nextSessions = importSessions.filter((session) => session.id !== activeSessionId);
+        persistSessions(nextSessions);
+        setActiveSessionId(nextSessions[0]?.id || '');
     };
 
     return (
@@ -201,14 +321,14 @@ export default function PhonePeImport() {
             <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 3 }}>
                 <Stack spacing={1}>
                     <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                        PhonePe Smart Import 🤖
+                        PhonePe Smart Import
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
                         AI-powered import: Upload your PDF, and we'll categorize and analyze your spending automatically.
                     </Typography>
-                    {statementRange && (
+                    {displayRange && (
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                            Statement Range: {statementRange.start} - {statementRange.end}
+                            Statement Range: {displayRange.start} - {displayRange.end}
                         </Typography>
                     )}
                 </Stack>
@@ -276,6 +396,11 @@ export default function PhonePeImport() {
                         {error}
                     </Typography>
                 )}
+                {aiError && !error && (
+                    <Typography sx={{ mt: 2 }} color="warning.main">
+                        {aiError}
+                    </Typography>
+                )}
             </Paper>
 
             {previewRows.length > 0 && (
@@ -325,7 +450,7 @@ export default function PhonePeImport() {
                                                 />
                                             </TableCell>
                                             <TableCell align="right" sx={{ color: row.type === 'CREDIT' ? 'success.main' : 'error.main' }}>
-                                                {row.type === 'CREDIT' ? '+' : '-'} ₹{row.amount}
+                                                {row.type === 'CREDIT' ? '+' : '-'} Rs. {row.amount}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -336,50 +461,112 @@ export default function PhonePeImport() {
                 </Box>
             )}
 
-            {/* Imported Transactions Section with Charts and Table */}
-            {importedRows.length > 0 && (
+            {/* Imported Statements Section */}
+            {importSessions.length > 0 && (
                 <Box>
-                    {/* Persistent Dashboard for Imported Data */}
-                    <ImportDashboard transactions={importedRows} />
-
-                    <Grid container spacing={3} sx={{ mb: 3 }}>
-                        <Grid item xs={12}>
-                            <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-                                <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                                    Analytics (All Time)
-                                </Typography>
-                                <CategorySummary expenses={importedRows} />
-                            </Paper>
-                        </Grid>
-                    </Grid>
-
-                    <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 2 }}>
-                            <Stack>
-                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                                    Imported PhonePe Transactions ({importedRows.length})
-                                </Typography>
-                                {importStats && (
-                                    <Typography variant="body2" color="text.secondary">
-                                        Last Import: +{importStats.added} new | {importStats.duplicates} duplicates
-                                    </Typography>
-                                )}
+                    <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 3 }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
+                            <FormControl fullWidth>
+                                <InputLabel id="statement-select-label">Statement</InputLabel>
+                                <Select
+                                    labelId="statement-select-label"
+                                    label="Statement"
+                                    value={activeSessionId || ''}
+                                    onChange={(e) => setActiveSessionId(e.target.value)}
+                                >
+                                    {importSessions.map((session) => (
+                                        <MenuItem key={session.id} value={session.id}>
+                                            {formatSessionLabel(session)}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', md: 'auto' } }}>
+                                <Button variant="outlined" color="error" onClick={handleDeleteSession} fullWidth={isMobile}>
+                                    Delete This Statement
+                                </Button>
+                                <Button variant="outlined" color="error" onClick={handleDeleteAll} fullWidth={isMobile}>
+                                    Clear All Data
+                                </Button>
                             </Stack>
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                                onClick={handleDeleteAll}
-                            >
-                                Clear All Data
-                            </Button>
                         </Stack>
-                        <ExpenseList
-                            expenses={importedRows}
-                            onDelete={handleDeleteImported}
-                            onEdit={handleEditImported}
-                        />
+                        {activeSession && (
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                Imported on: {new Date(activeSession.createdAt).toLocaleString()} | File: {activeSession.fileName} | Transactions: {activeTransactions.length}
+                            </Typography>
+                        )}
                     </Paper>
+
+                    {activeTransactions.length > 0 && (
+                        <>
+                            {isMobile && (
+                                <Paper sx={{ mb: 2, borderRadius: 2 }}>
+                                    <Tabs
+                                        value={tabValue}
+                                        onChange={(e, val) => setTabValue(val)}
+                                        variant="fullWidth"
+                                        indicatorColor="primary"
+                                        textColor="primary"
+                                    >
+                                        <Tab label="Analysis" />
+                                        <Tab label="Transactions" />
+                                    </Tabs>
+                                </Paper>
+                            )}
+
+                            {!isMobile && (
+                                <>
+                                    <ImportDashboard transactions={activeTransactions} />
+                                    <Grid container rowSpacing={{ xs: 2, sm: 3 }} columnSpacing={{ xs: 0, sm: 3 }} sx={{ mb: 3, width: '100%', mx: 0 }}>
+                                        <Grid item xs={12}>
+                                            <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 3 }}>
+                                                <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1rem', md: '1.25rem' } }}>
+                                                    Analytics (Selected Statement)
+                                                </Typography>
+                                                <CategorySummary expenses={activeTransactions} />
+                                            </Paper>
+                                        </Grid>
+                                    </Grid>
+                                    <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }}>
+                                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 2 }}>
+                                            <Stack>
+                                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', md: '1.25rem' } }}>
+                                                    Transactions ({activeTransactions.length})
+                                                </Typography>
+                                                {importStats && (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Last Import: +{importStats.added} new
+                                                    </Typography>
+                                                )}
+                                            </Stack>
+                                        </Stack>
+                                        <ExpenseList expenses={activeTransactions} onDelete={handleDeleteImported} onEdit={handleEditImported} />
+                                    </Paper>
+                                </>
+                            )}
+
+                            {isMobile && tabValue === 0 && (
+                                <Box>
+                                    <ImportDashboard transactions={activeTransactions} />
+                                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3 }}>
+                                        <Typography variant="h6" sx={{ mb: 2 }}>Analytics</Typography>
+                                        <CategorySummary expenses={activeTransactions} />
+                                    </Paper>
+                                </Box>
+                            )}
+
+                            {isMobile && tabValue === 1 && (
+                                <Paper sx={{ p: 2, borderRadius: 3 }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                            Transactions ({activeTransactions.length})
+                                        </Typography>
+                                    </Stack>
+                                    <ExpenseList expenses={activeTransactions} onDelete={handleDeleteImported} onEdit={handleEditImported} />
+                                </Paper>
+                            )}
+                        </>
+                    )}
                 </Box>
             )}
         </Container>

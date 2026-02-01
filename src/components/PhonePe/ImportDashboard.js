@@ -60,28 +60,55 @@ export default function ImportDashboard({ transactions }) {
             </Typography>
             <Grid container rowSpacing={{ xs: 2, sm: 3 }} columnSpacing={{ xs: 0, sm: 3 }} sx={{ width: '100%', mx: 0 }}>
                 <Grid item xs={12} md={4}>
-                    <Stack spacing={3}>
+                    <Stack spacing={2} sx={{ height: '100%' }}>
                         <Card sx={{ borderRadius: 3, bgcolor: '#f8f9fa' }}>
                             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                                 <Typography color="text.secondary" gutterBottom>Net Flow</Typography>
-                                <Typography variant="h4" sx={{ fontWeight: 'bold', color: stats.net >= 0 ? 'green' : 'red', fontSize: { xs: '1.75rem', sm: '2rem' } }}>
+                                <Typography
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        color: stats.net >= 0 ? 'green' : 'red',
+                                        fontSize: { xs: '1.5rem', sm: '2rem' },
+                                        wordBreak: 'break-word',
+                                        lineHeight: 1.2
+                                    }}
+                                >
                                     {stats.net >= 0 ? '+' : '-'}Rs. {Math.abs(stats.net).toLocaleString()}
                                 </Typography>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2, flexWrap: { sm: 'wrap' } }}>
-                                    <Chip icon={<TrendingUpIcon />} label={`Income: Rs. ${stats.totalCredit.toLocaleString()}`} color="success" variant="outlined" size="small" sx={{ maxWidth: '100%' }} />
-                                    <Chip icon={<TrendingDownIcon />} label={`Expense: Rs. ${stats.totalDebit.toLocaleString()}`} color="error" variant="outlined" size="small" sx={{ maxWidth: '100%' }} />
+                                <Stack spacing={1} sx={{ mt: 2 }}>
+                                    <Chip
+                                        icon={<TrendingUpIcon />}
+                                        label={`Inc: Rs. ${stats.totalCredit.toLocaleString()}`}
+                                        color="success"
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ maxWidth: '100%', justifyContent: 'flex-start' }}
+                                    />
+                                    <Chip
+                                        icon={<TrendingDownIcon />}
+                                        label={`Exp: Rs. ${stats.totalDebit.toLocaleString()}`}
+                                        color="error"
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ maxWidth: '100%', justifyContent: 'flex-start' }}
+                                    />
                                 </Stack>
                             </CardContent>
                         </Card>
 
-                        <Card sx={{ borderRadius: 3 }}>
+                        <Card sx={{ borderRadius: 3, flexGrow: 1 }}>
                             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                                 <Typography color="text.secondary" gutterBottom>Top Spending Categories</Typography>
                                 <Stack spacing={1.5} sx={{ mt: 1 }}>
                                     {stats.topCategories.map(([cat, amount], idx) => (
-                                        <Box key={cat} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <Typography variant="body2" sx={{ pr: 1, wordBreak: 'break-word' }}>{idx + 1}. {cat}</Typography>
-                                            <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Rs. {amount.toLocaleString()}</Typography>
+                                        <Box key={cat} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Typography variant="body2" sx={{ pr: 1, wordBreak: 'break-word', flex: 1 }}>
+                                                {idx + 1}. {cat}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                                Rs. {amount.toLocaleString()}
+                                            </Typography>
                                         </Box>
                                     ))}
                                 </Stack>
@@ -104,8 +131,7 @@ export default function ImportDashboard({ transactions }) {
                                             sx={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
-                                                alignItems: { xs: 'flex-start', sm: 'center' },
-                                                flexDirection: { xs: 'column', sm: 'row' },
+                                                alignItems: 'center',
                                                 gap: 1,
                                                 mb: 1.5,
                                                 p: 1,
@@ -113,12 +139,14 @@ export default function ImportDashboard({ transactions }) {
                                                 borderRadius: 2
                                             }}
                                         >
-                                            <Box sx={{ minWidth: 0, width: { xs: '100%', sm: '70%' } }}>
-                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>{tx.merchant || tx.description}</Typography>
+                                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {tx.merchant || tx.description}
+                                                </Typography>
                                                 <Typography variant="caption" color="text.secondary">{tx.date}</Typography>
                                             </Box>
-                                            <Typography variant="body2" color="error" sx={{ fontWeight: 'bold' }}>
-                                                -Rs. {Math.abs(tx.amount).toLocaleString()}
+                                            <Typography variant="body2" color="error" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                                {Math.abs(tx.amount).toLocaleString()}
                                             </Typography>
                                         </Box>
                                     ))}
@@ -133,8 +161,7 @@ export default function ImportDashboard({ transactions }) {
                                             sx={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
-                                                alignItems: { xs: 'flex-start', sm: 'center' },
-                                                flexDirection: { xs: 'column', sm: 'row' },
+                                                alignItems: 'center',
                                                 gap: 1,
                                                 mb: 1.5,
                                                 p: 1,
@@ -142,12 +169,14 @@ export default function ImportDashboard({ transactions }) {
                                                 borderRadius: 2
                                             }}
                                         >
-                                            <Box sx={{ minWidth: 0, width: { xs: '100%', sm: '70%' } }}>
-                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>{tx.merchant || tx.description}</Typography>
+                                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {tx.merchant || tx.description}
+                                                </Typography>
                                                 <Typography variant="caption" color="text.secondary">{tx.date}</Typography>
                                             </Box>
-                                            <Typography variant="body2" color="success" sx={{ fontWeight: 'bold' }}>
-                                                +Rs. {Math.abs(tx.amount).toLocaleString()}
+                                            <Typography variant="body2" color="success" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                                {Math.abs(tx.amount).toLocaleString()}
                                             </Typography>
                                         </Box>
                                     ))}
